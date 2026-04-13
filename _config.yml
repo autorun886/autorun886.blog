@@ -108,3 +108,11 @@ sitemap:
   path: sitemap.xml
 baidusitemap:
   path: baidusitemap.xml
+
+# 字数统计配置
+symbols_count_time:
+  symbols: true   # 是否显示文章字数
+  time: true      # 是否显示阅读时长
+  total_symbols: true   # 是否显示全站总字数
+  total_time: true      # 是否显示全站总阅读时长
+  exclude_codeblock: false # 是否排除代码块字数
