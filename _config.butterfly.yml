@@ -56,7 +56,7 @@ social:
 favicon: /img/favicon.png
 
 avatar:
-  img: /img/avatar.png
+  img: /img/avatar.jpg
   effect: false
 
 # Disable all banner images
@@ -272,12 +272,12 @@ footer:
 
 aside:
   enable: true
-  hide: true
+  hide: false
   # Show the button to hide the aside in bottom right button
   button: true
   mobile: true
   # Position: left / right
-  position: right
+  position: left
   display:
     archive: true
     tag: true
@@ -439,9 +439,9 @@ wordcount:
 
 # Busuanzi count for PV / UV in site
 busuanzi:
-  site_uv: true
-  site_pv: true
-  page_pv: true
+  site_uv: false
+  site_pv: false
+  page_pv: false
 
 # --------------------------------------
 # Math
@@ -691,7 +691,7 @@ baidu_analytics:
 google_analytics:
 
 # https://www.cloudflare.com/zh-tw/web-analytics/
-cloudflare_analytics:
+cloudflare_analytics: cfut_BIyZCEeKlXiqv6Yn95tSJ9gVbPdGZnfM55arCPak0f9ad7e0
 
 # https://clarity.microsoft.com/
 microsoft_clarity:
@@ -887,7 +887,7 @@ fireworks:
 
 # Mouse click effects: Heart symbol
 click_heart:
-  enable: false
+  enable: true
   mobile: false
 
 # Mouse click effects: words
