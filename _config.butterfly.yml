@@ -46,9 +46,9 @@ code_blocks:
 # Formal:
 #   icon: link || the description || color
 social:
-  # fab fa-github: https://github.com/xxxxx || Github || '#24292e'
-  # fas fa-envelope: mailto:xxxxxx@gmail.com || Email || '#4a7dbe'
-
+  fab fa-github: https://github.com/autorun886 || Github || '#24292e'
+  fas fa-envelope: mailto:sunyiping1208@outlook.com || Email || '#4a7dbe'
+  fas fa-rss: /atom.xml || RSS || '#FFA500'
 # --------------------------------------
 # Image Settings
 # --------------------------------------
@@ -56,7 +56,7 @@ social:
 favicon: /img/favicon.png
 
 avatar:
-  img: /img/butterfly-icon.png
+  img: /img/avatar.png
   effect: false
 
 # Disable all banner images
@@ -267,12 +267,12 @@ footer:
   custom_text:
 
 # --------------------------------------
-# Aside Settings
+# Aside Settings 侧边栏
 # --------------------------------------
 
 aside:
   enable: true
-  hide: false
+  hide: true
   # Show the button to hide the aside in bottom right button
   button: true
   mobile: true
@@ -284,13 +284,13 @@ aside:
     category: true
   card_author:
     enable: true
-    description:
+    description: #描述
     button:
       enable: true
       icon: fab fa-github
       text: Follow Me
-      link: https://github.com/xxxxxx
-  card_announcement:
+      link: https://github.com/autorun886
+  card_announcement: #公告
     enable: true
     content: This is my Blog
   card_recent_post:
@@ -318,7 +318,7 @@ aside:
     enable: true
     # If set 0 will show all
     limit: 40
-    color: false
+    color: true
     custom_colors:
     # Order of tags, random/name/length
     orderby: random
@@ -352,7 +352,7 @@ aside:
     # Time difference between publish date and now
     # Formal: Month/Day/Year Time or Year/Month/Day Time
     # Leave it empty if you don't enable this feature
-    runtime_date:
+    runtime_date: 28/9/2025 00:00:00
 
 # --------------------------------------
 # Bottom right button
@@ -387,10 +387,10 @@ darkmode:
   # autoChangeMode: 1  Following System Settings, if the system doesn't support dark mode, it will switch dark mode between 6 pm to 6 am
   # autoChangeMode: 2  Switch dark mode between 6 pm to 6 am
   # autoChangeMode: false
-  autoChangeMode: false
+  autoChangeMode: 2
   # Set the light mode time. The value is between 0 and 24. If not set, the default value is 6 and 18
-  start:
-  end:
+  start: 6
+  end: 22
 
 # Show scroll percent in scroll-to-top button
 rightside_scroll_percent: false
@@ -429,7 +429,7 @@ copy:
 
 # Need to install the hexo-wordcount plugin
 wordcount:
-  enable: false
+  enable: true
   # Display the word count of the article in post meta
   post_wordcount: true
   # Display the time to read the article in post meta
@@ -474,7 +474,7 @@ math:
 search:
   # Choose: algolia_search / local_search / docsearch
   # leave it empty if you don't need search
-  use:
+  use: local_search
   placeholder:
 
   # Algolia Search
@@ -487,7 +487,7 @@ search:
     # Preload the search data when the page loads.
     preload: false
     # Show top n results per article, show all results by setting to -1
-    top_n_per_article: 1
+    top_n_per_article: 7
     # Unescape html strings to the readable one.
     unescape: false
     # Enable pagination for search results
