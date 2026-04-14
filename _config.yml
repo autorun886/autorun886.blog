@@ -5,15 +5,15 @@
 # Site
 title: autorun's blog
 subtitle: ''
-description: ''
-keywords:
+description: '一个专注于技术分享的个人博客'
+keywords: 技术博客, 编程, 逆向, 渗透, AI
 author: autorun
 language: cn
-timezone: ''
+timezone: 'Asia/Shanghai'
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: http://autorun.top
+url: http://www.autorun.top
 permalink: :permalink
 permalink_defaults:
 pretty_urls:
@@ -116,3 +116,9 @@ symbols_count_time:
   total_symbols: true   # 是否显示全站总字数
   total_time: true      # 是否显示全站总阅读时长
   exclude_codeblock: false # 是否排除代码块字数
+
+# RSS 订阅配置
+feed:
+  type: atom
+  path: atom.xml
+  limit: false
