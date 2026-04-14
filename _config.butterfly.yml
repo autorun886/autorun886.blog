@@ -352,7 +352,7 @@ aside:
     # Time difference between publish date and now
     # Formal: Month/Day/Year Time or Year/Month/Day Time
     # Leave it empty if you don't enable this feature
-    runtime_date: 28/9/2025 00:00:00
+    runtime_date: 9/28/2025 00:00:00
 
 # --------------------------------------
 # Bottom right button

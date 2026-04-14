@@ -114,3 +114,9 @@ feed:
   type: atom
   path: atom.xml
   limit: false
+
+# 本地搜索配置
+search:
+  path: search.xml
+  field: post
+  content: true
