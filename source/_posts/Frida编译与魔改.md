@@ -3,6 +3,7 @@ title: Frida编译与魔改
 tags: Frida
 permalink: /post/frida-hide.html
 date: 2025-11-30 23:56:11
+description: 在ubuntu上编译Frida，并对其进行Florida魔改以隐藏特征
 ---
 # Frida编译与魔改
 

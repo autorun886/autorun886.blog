@@ -116,7 +116,6 @@ body {
 <canvas id="starfield"></canvas>
 <div class="header-content">
 <h1>技术成长轨迹</h1>
-<p>结构化成长，而不是零散堆叠</p>
 </div>
 </header>
 
@@ -128,15 +127,15 @@ body {
 <h2 class="time-title">2020 · 初二</h2>
 <div class="grid">
 <div class="block">
-<h4>语言基础 <span class="level">★★★</span></h4>
+<h4>语言基础 </h4>
 <p><span class="tag">Python</span><span class="tag">Java</span><span class="tag">C</span><span class="tag">HTML</span></p>
 </div>
 <div class="block">
-<h4>尝试 <span class="level">★★★</span></h4>
+<h4>Web逆向入门 </h4>
 <p>JS逆向 / 爬虫入门</p>
 </div>
 </div>
-<div class="summary">从兴趣驱动开始，没有体系，但完成了"入门门槛"的跨越。</div>
+<div class="summary">对这一阶段的总结： 果然，人一闲下来什么事都做的出来，包括学计算机 w(ﾟДﾟ)w</div>
 </div>
 </div>
 
@@ -146,19 +145,39 @@ body {
 <h2 class="time-title">2025.09 · 大一上</h2>
 <div class="grid">
 <div class="block">
-<h4>工程实践 <span class="level">★★★</span></h4><p>博客 / GitHub / Vercel / Markdown</p></div>
-<div class="block">
-<h4>语言扩展 <span class="level">★★★</span></h4><p>Rust / Go / JavaScript</p></div>
-<div class="block">
-<h4>安卓逆向 <span class="level">★★★</span></h4><p>Frida / IDA / Hook / ARM / Angr</p></div>
-<div class="block">
-<h4>Web逆向 <span class="level">★★★</span></h4><p>混淆 / AST</p></div>
-<div class="block">
-<h4>基础设施 <span class="level">★★★</span></h4><p>Linux / Docker / Git / CMake</p></div>
-<div class="block">
-<h4>AI <span class="level">★★★</span></h4><p>词向量 / Transformer</p></div>
+<h4>工程实践 </h4>
+<p>Hexo + Butterfly / GitHub / Vercel / Markdown</p>
 </div>
-<div class="summary">从"点状学习"升级为"模块化能力"，形成逆向 + 基础 + AI 的结构。</div>
+<div class="block">
+<h4>语言扩展 </h4>
+<p><span class="tag">Rust</span><span class="tag">Go</span><span class="tag">JavaScript</span></p>
+</div>
+<div class="block">
+<h4>安卓逆向 </h4>
+<p>Frida / IDA / Apatch Hook / Inline Hook / ARM汇编 / Angr符号执行</p>
+</div>
+<div class="block">
+<h4>Web逆向 </h4>
+<p>混淆对抗 / AST反混淆</p>
+</div>
+<div class="block">
+<h4>基础设施 </h4>
+<p>Linux / Docker / Git / CMake</p>
+</div>
+<div class="block">
+<h4>网络协议 </h4>
+<p>TLS底层协议</p>
+</div>
+<div class="block">
+<h4>人工智能 </h4>
+<p>词向量 / Transformer模型理论</p>
+</div>
+<div class="block">
+<h4>接触框架 </h4>
+<p>Unicorn / Unidbg / Keystone / Capstone / Traefik / eCapture</p>
+</div>
+</div>
+<div class="summary">也算得上勉强入门了，学得很比较浅</div>
 </div>
 </div>
 
@@ -168,13 +187,21 @@ body {
 <h2 class="time-title">2026.03 · 大一下</h2>
 <div class="grid">
 <div class="block">
-<h4>安卓逆向 <span class="level">★★★</span></h4><p>Frida / IDA / LLDB / Unidbg</p></div>
+<h4>安卓逆向 </h4>
+<p>深入Frida / IDA / LLDB / Unidbg / 静动态进阶</p>
+</div>
 <div class="block">
-<h4>iOS逆向 <span class="level">★★★</span></h4><p>砸壳 / Swift</p></div>
+<h4>iOS逆向 </h4>
+<p>环境搭建 / 砸壳 / Swift逆向</p>
+</div>
 <div class="block">
-<h4>Web安全 <span class="level">★★★</span></h4><p>XSS / SQL / RCE / XXE</p></div>
+<h4>Web安全 </h4>
+<p>XSS / SQL注入 / CSRF/SSRF / 文件上传与包含 / RCE / XXE</p>
+</div>
 <div class="block">
-<h4>AI架构 <span class="level">★★★</span></h4><p>RAG / MCP / Agent</p></div>
+<h4>AI应用架构 </h4>
+<p>ReAct / Plan-and-Execute / SuperVisor / MCP Server / RAG知识库</p>
+</div>
 </div>
 <div class="summary">开始从"会用工具"走向"理解底层"，逐步具备实战能力。</div>
 </div>
