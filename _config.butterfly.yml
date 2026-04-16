@@ -22,6 +22,7 @@ menu:
   # List||fas fa-list:
   #   Music: /music/ || fas fa-music
   #   Movie: /movies/ || fas fa-video
+  技术成长: /技术成长/ || fas fa-graduation-cap
 
 # --------------------------------------
 # Code Blocks Settings
@@ -53,7 +54,7 @@ social:
 # Image Settings
 # --------------------------------------
 
-favicon: /img/favicon.png
+favicon: /img/avatar.jpg
 
 avatar:
   img: /img/avatar.jpg

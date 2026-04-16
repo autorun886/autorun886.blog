@@ -100,8 +100,8 @@ theme: butterfly
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
-deploy:
-  type: ''
+# deploy:
+#   type: ''
 
 # 站点地图
 sitemap:
@@ -120,3 +120,8 @@ search:
   path: search.xml
   field: post
   content: true
+
+deploy:
+  type: git
+  repo: git@github.com:autorun886/autorun886.blog.git # 推荐使用 SSH 地址
+  branch: main # 或 master，取决于你仓库的默认分支名
