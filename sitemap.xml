@@ -2,7 +2,25 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://www.autorun.top/%E5%AD%A6%E4%B9%A0%E7%BB%8F%E5%8E%86/index.html</loc>
+    <loc>http://www.autorun.top/%E6%8A%80%E6%9C%AF%E6%88%90%E9%95%BF/index.html</loc>
+    
+    <lastmod>2026-04-16</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.autorun.top/post/my-frist-blog.html</loc>
+    
+    <lastmod>2026-04-16</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.autorun.top/post/frida-hide.html</loc>
     
     <lastmod>2026-04-16</lastmod>
     
@@ -19,24 +37,6 @@
     <priority>0.6</priority>
   </url>
   
-  <url>
-    <loc>http://www.autorun.top/post/my-frist-blog.html</loc>
-    
-    <lastmod>2026-04-13</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://www.autorun.top/post/frida-hide.html</loc>
-    
-    <lastmod>2026-04-13</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
 
   <url>
     <loc>http://www.autorun.top/</loc>
@@ -45,13 +45,6 @@
     <priority>1.0</priority>
   </url>
 
-  
-  <url>
-    <loc>http://www.autorun.top/tags/%E7%88%AC%E8%99%AB/</loc>
-    <lastmod>2026-04-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
   
   <url>
     <loc>http://www.autorun.top/tags/Frida/</loc>
@@ -67,17 +60,24 @@
     <priority>0.2</priority>
   </url>
   
+  <url>
+    <loc>http://www.autorun.top/tags/%E7%88%AC%E8%99%AB/</loc>
+    <lastmod>2026-04-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
   
   <url>
-    <loc>http://www.autorun.top/categories/%E7%BD%91%E7%BB%9C%E7%88%AC%E8%99%AB/</loc>
+    <loc>http://www.autorun.top/categories/%E7%94%9F%E6%B4%BB/</loc>
     <lastmod>2026-04-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>http://www.autorun.top/categories/%E7%94%9F%E6%B4%BB/</loc>
+    <loc>http://www.autorun.top/categories/%E7%BD%91%E7%BB%9C%E7%88%AC%E8%99%AB/</loc>
     <lastmod>2026-04-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>

@@ -1,0 +1,498 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>技术成长轨迹 | autorun's blog</title><meta name="author" content="autorun"><meta name="copyright" content="autorun"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="&#x2F;* 导航栏样式调整 - 降低对比度 *&#x2F; #nav {   background: rgba(15, 23, 42, 0.8) !important;   backdrop-filter: blur(10px); }  #nav .site-name, #nav .menus_items .menus_item a {   color: #94a3b8 !important; }  #nav">
+<meta property="og:type" content="website">
+<meta property="og:title" content="技术成长轨迹">
+<meta property="og:url" content="http://www.autorun.top/%E6%8A%80%E6%9C%AF%E6%88%90%E9%95%BF/index.html">
+<meta property="og:site_name" content="autorun&#39;s blog">
+<meta property="og:description" content="&#x2F;* 导航栏样式调整 - 降低对比度 *&#x2F; #nav {   background: rgba(15, 23, 42, 0.8) !important;   backdrop-filter: blur(10px); }  #nav .site-name, #nav .menus_items .menus_item a {   color: #94a3b8 !important; }  #nav">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.autorun.top/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-16T07:55:45.000Z">
+<meta property="article:modified_time" content="2026-04-16T12:54:47.140Z">
+<meta property="article:author" content="autorun">
+<meta property="article:tag" content="技术博客, 编程, 逆向, 渗透, AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.autorun.top/img/avatar.jpg"><script type="application/ld+json"></script><link rel="shortcut icon" href="/img/avatar.jpg"><link rel="canonical" href="http://www.autorun.top/%E6%8A%80%E6%9C%AF%E6%88%90%E9%95%BF/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//static.cloudflareinsights.com"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const hour = new Date().getHours()
+          const isNight = hour <= 6 || hour >= 22
+          if (theme === undefined) isNight ? activateDarkMode() : activateLightMode()
+          else theme === 'light' ? activateLightMode() : activateDarkMode()
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script defer="defer" data-pjax="data-pjax" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;: &quot;cfut_BIyZCEeKlXiqv6Yn95tSJ9gVbPdGZnfM55arCPak0f9ad7e0&quot;}"></script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":7,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '技术成长轨迹',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'page'
+}</script><meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="autorun's blog" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/%E6%8A%80%E6%9C%AF%E6%88%90%E9%95%BF/"><i class="fa-fw fas fa-graduation-cap"></i><span> 技术成长</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">autorun's blog</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/%E6%8A%80%E6%9C%AF%E6%88%90%E9%95%BF/"><i class="fa-fw fas fa-graduation-cap"></i><span> 技术成长</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><h1 class="title-seo">技术成长轨迹</h1></header><main class="layout hide-aside" id="content-inner"><div id="page"><div class="page-title">技术成长轨迹</div><div class="container" id="article-container"><style>
+/* 导航栏样式调整 - 降低对比度 */
+#nav {
+  background: rgba(15, 23, 42, 0.8) !important;
+  backdrop-filter: blur(10px);
+}
+
+#nav .site-name,
+#nav .menus_items .menus_item a {
+  color: #94a3b8 !important;
+}
+
+#nav .menus_items .menus_item a:hover {
+  color: #38bdf8 !important;
+}
+
+/* 隐藏主题的 footer */
+#footer {
+  display: none !important;
+}
+
+/* 强制覆盖主题样式，实现真正全屏 */
+#page, #content-inner, .layout {
+  background: #0f172a !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+}
+
+body {
+  background: #0f172a !important;
+}
+
+/* 全屏容器 */
+.tech-growth {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: "Segoe UI", "PingFang SC", sans-serif;
+  min-height: 100vh;
+}
+
+/* ===== header 星空背景 ===== */
+.tech-growth header{
+  position: relative;
+  text-align: center;
+  padding: 70px 20px;
+  background: linear-gradient(135deg,#1e293b,#020617);
+  overflow: hidden;
+}
+
+.tech-growth #starfield{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.tech-growth .header-content{
+  position: relative;
+  z-index: 1;
+}
+
+.tech-growth h1{font-size:3em;margin:0;color:#e2e8f0}
+.tech-growth header p{color:#94a3b8}
+
+/* ===== 时间线 ===== */
+.tech-growth .timeline{position:relative;max-width:1200px;margin:40px auto;padding:20px}
+.tech-growth .timeline::before{content:'';position:absolute;left:50%;width:2px;height:100%;background:#38bdf8}
+
+.tech-growth .item{position:relative;width:100%;margin-bottom:40px;opacity:0;transform:translateY(40px);transition:.6s}
+.tech-growth .item.show{opacity:1;transform:translateY(0)}
+
+.tech-growth .node{position:absolute;left:50%;top:20px;width:12px;height:12px;background:#38bdf8;border-radius:50%;transform:translateX(-50%)}
+
+.tech-growth .content{margin-left:calc(50% + 20px);background:#1e293b;border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.tech-growth .item:nth-child(even) .content{margin-left:0;margin-right:calc(50% + 20px)}
+
+.tech-growth .time-title{color:#38bdf8;font-size:1.2em;margin-bottom:15px;font-weight:600;letter-spacing:.5px}
+
+.tech-growth .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+
+.tech-growth .block{background:#0f172a;padding:12px;border-radius:8px}
+.tech-growth .block h4{margin:0 0 6px;font-size:.9em;color:#38bdf8;display:flex;justify-content:space-between;align-items:center}
+.tech-growth .level{font-size:.7em;color:#94a3b8}
+.tech-growth .block p{margin:0;font-size:.85em;color:#cbd5f5}
+
+.tech-growth .tag{display:inline-block;background:#38bdf8;color:#0f172a;padding:2px 6px;border-radius:5px;margin:2px;font-size:.75em}
+
+.tech-growth .summary{margin-top:12px;padding:10px;border-left:3px solid #38bdf8;color:#94a3b8;font-size:.9em}
+
+.tech-growth footer{text-align:center;padding:40px;color:#64748b}
+
+@media (max-width: 768px) {
+  .tech-growth .timeline::before{left:20px}
+  .tech-growth .node{left:20px}
+  .tech-growth .content{margin-left:50px !important;margin-right:0 !important}
+  .tech-growth .item:nth-child(even) .content{margin-left:50px !important}
+}
+</style>
+
+<div class="tech-growth">
+
+<header>
+<canvas id="starfield"></canvas>
+<div class="header-content">
+<h1>技术成长轨迹</h1>
+</div>
+</header>
+
+<div class="timeline">
+
+<div class="item">
+<div class="node"></div>
+<div class="content">
+<h2 class="time-title">2020 · 初二</h2>
+<div class="grid">
+<div class="block">
+<h4>语言基础 </h4>
+<p><span class="tag">Python</span><span class="tag">Java</span><span class="tag">C</span><span class="tag">HTML</span></p>
+</div>
+<div class="block">
+<h4>Web逆向入门 </h4>
+<p>JS逆向 / 爬虫入门</p>
+</div>
+</div>
+<div class="summary">对这一阶段的总结： 果然，人一闲下来什么事都做的出来，包括学计算机 w(ﾟДﾟ)w</div>
+</div>
+</div>
+
+<div class="item">
+<div class="node"></div>
+<div class="content">
+<h2 class="time-title">2025.09 · 大一上</h2>
+<div class="grid">
+<div class="block">
+<h4>工程实践 </h4>
+<p>Hexo + Butterfly / GitHub / Vercel / Markdown</p>
+</div>
+<div class="block">
+<h4>语言扩展 </h4>
+<p><span class="tag">Rust</span><span class="tag">Go</span><span class="tag">JavaScript</span></p>
+</div>
+<div class="block">
+<h4>安卓逆向 </h4>
+<p>Frida / IDA / Apatch Hook / Inline Hook / ARM汇编 / Angr符号执行</p>
+</div>
+<div class="block">
+<h4>Web逆向 </h4>
+<p>混淆对抗 / AST反混淆</p>
+</div>
+<div class="block">
+<h4>基础设施 </h4>
+<p>Linux / Docker / Git / CMake</p>
+</div>
+<div class="block">
+<h4>网络协议 </h4>
+<p>TLS底层协议</p>
+</div>
+<div class="block">
+<h4>人工智能 </h4>
+<p>词向量 / Transformer模型理论</p>
+</div>
+<div class="block">
+<h4>接触框架 </h4>
+<p>Unicorn / Unidbg / Keystone / Capstone / Traefik / eCapture</p>
+</div>
+</div>
+<div class="summary">也算得上勉强入门了，学得很比较浅</div>
+</div>
+</div>
+
+<div class="item">
+<div class="node"></div>
+<div class="content">
+<h2 class="time-title">2026.03 · 大一下</h2>
+<div class="grid">
+<div class="block">
+<h4>安卓逆向 </h4>
+<p>深入Frida / IDA / LLDB / Unidbg / 静动态进阶</p>
+</div>
+<div class="block">
+<h4>iOS逆向 </h4>
+<p>环境搭建 / 砸壳 / Swift逆向</p>
+</div>
+<div class="block">
+<h4>Web安全 </h4>
+<p>XSS / SQL注入 / CSRF/SSRF / 文件上传与包含 / RCE / XXE</p>
+</div>
+<div class="block">
+<h4>AI应用架构 </h4>
+<p>ReAct / Plan-and-Execute / SuperVisor / MCP Server / RAG知识库</p>
+</div>
+</div>
+<div class="summary">开始从"会用工具"走向"理解底层"，逐步具备实战能力。</div>
+</div>
+</div>
+
+</div>
+
+<footer>
+<p>© 下一阶段：工程化 & 实战化</p>
+</footer>
+
+</div>
+
+<script>
+/* ===== 时间线动画 ===== */
+const items=document.querySelectorAll('.tech-growth .item');
+const observer=new IntersectionObserver(entries=>{
+entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('show')}})
+},{threshold:.15});
+items.forEach(i=>observer.observe(i));
+
+/* ===== 星空 + 彗星 ===== */
+const canvas = document.getElementById('starfield');
+const ctx = canvas.getContext('2d');
+
+let stars = [];
+let meteors = [];
+
+const STAR_COUNT = 120;
+
+function resize(){
+canvas.width = canvas.offsetWidth;
+canvas.height = canvas.offsetHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+/* 星星初始化 */
+function initStars(){
+stars = [];
+for(let i=0;i<STAR_COUNT;i++){
+stars.push({
+x: Math.random()*canvas.width,
+y: Math.random()*canvas.height,
+r: Math.random()*1.2,
+v: Math.random()*0.3 + 0.05,
+alpha: Math.random(),
+delta: Math.random()*0.02 + 0.005
+});
+}
+}
+initStars();
+
+/* 彗星 */
+function createMeteor(){
+return {
+x: Math.random()*canvas.width,
+y: -20,
+vx: -(Math.random()*2 + 2),
+vy: Math.random()*3 + 4,
+len: Math.random()*80 + 80,
+life: 0,
+maxLife: 80
+};
+}
+
+/* 低频生成 */
+setInterval(()=>{
+const rand = Math.random();
+
+if(rand < 0.3){
+meteors.push(createMeteor());
+}
+
+/* 稀有大彗星 */
+if(rand < 0.08){
+meteors.push({
+x: canvas.width,
+y: Math.random()*canvas.height*0.3,
+vx: -6,
+vy: 3,
+len: 200,
+life: 0,
+maxLife: 120
+});
+}
+}, 2000);
+
+/* 渲染 */
+function draw(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+/* 星星（带呼吸） */
+stars.forEach(s=>{
+s.alpha += s.delta;
+if(s.alpha >= 1 || s.alpha <= 0.2){
+s.delta *= -1;
+}
+
+ctx.fillStyle = `rgba(56,189,248,${s.alpha})`;
+
+ctx.beginPath();
+ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+ctx.fill();
+
+s.y += s.v;
+if(s.y > canvas.height){
+s.y = 0;
+s.x = Math.random()*canvas.width;
+}
+});
+
+/* 彗星 */
+meteors.forEach((m, i)=>{
+m.x += m.vx;
+m.y += m.vy;
+m.life++;
+
+const opacity = 1 - m.life / m.maxLife;
+
+const gradient = ctx.createLinearGradient(
+m.x, m.y,
+m.x - m.vx * m.len/10,
+m.y - m.vy * m.len/10
+);
+
+gradient.addColorStop(0, `rgba(56,189,248,${opacity})`);
+gradient.addColorStop(1, "rgba(56,189,248,0)");
+
+ctx.strokeStyle = gradient;
+ctx.lineWidth = 2;
+
+ctx.beginPath();
+ctx.moveTo(m.x, m.y);
+ctx.lineTo(
+m.x - m.vx * m.len/10,
+m.y - m.vy * m.len/10
+);
+ctx.stroke();
+
+if(m.life > m.maxLife){
+meteors.splice(i,1);
+}
+});
+
+requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By autorun</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.1</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="false"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.4"></script></div></div></body></html>

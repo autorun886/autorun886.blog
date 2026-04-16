@@ -10,7 +10,7 @@
   <rights>All rights reserved 2026, autorun</rights>
   <subtitle>一个专注于技术分享的个人博客</subtitle>
   <title>autorun's blog</title>
-  <updated>2026-04-13T08:05:49.840Z</updated>
+  <updated>2026-04-16T12:42:04.874Z</updated>
   <entry>
     <author>
       <name>autorun</name>
@@ -22,12 +22,9 @@
     <id>http://www.autorun.top/post/frida-hide.html</id>
     <link href="http://www.autorun.top/post/frida-hide.html"/>
     <published>2025-11-30T15:56:11.000Z</published>
-    <summary>
-      <![CDATA[<h1 id="Frida编译与魔改"><a href="#Frida编译与魔改" class="headerlink" title="Frida编译与魔改"></a>Frida编译与魔改</h1><blockquote>
-<p>总觉得魔改个Frida方便些，网上说16版本稳定一]]>
-    </summary>
+    <summary>在ubuntu上编译Frida，并对其进行Florida魔改以隐藏特征</summary>
     <title>Frida编译与魔改</title>
-    <updated>2026-04-13T08:05:49.840Z</updated>
+    <updated>2026-04-16T12:42:04.874Z</updated>
   </entry>
   <entry>
     <author>
@@ -57,13 +54,8 @@
     <id>http://www.autorun.top/post/my-frist-blog.html</id>
     <link href="http://www.autorun.top/post/my-frist-blog.html"/>
     <published>2025-09-27T07:24:58.000Z</published>
-    <summary>
-      <![CDATA[<h1 id="My-First-Blog"><a href="#My-First-Blog" class="headerlink" title="My First Blog"></a>My First Blog</h1><br>
-<strong>我的第一个博客    
-
-<br]]>
-    </summary>
+    <summary>my first blog</summary>
     <title>My First Blog</title>
-    <updated>2026-04-13T08:06:18.216Z</updated>
+    <updated>2026-04-16T12:42:07.095Z</updated>
   </entry>
 </feed>
