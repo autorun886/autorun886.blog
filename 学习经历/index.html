@@ -1,0 +1,308 @@
+<!DOCTYPE html><html lang="cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>学习经历 | autorun's blog</title><meta name="author" content="autorun"><meta name="copyright" content="autorun"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content=".learning-journey {     margin: 0;     font-family: &quot;Segoe UI&quot;, &quot;PingFang SC&quot;, sans-serif;     background: #0f172a;     color: #e2e8f0;     line-height: 1.6;   }   .learning-journey header {     te">
+<meta property="og:type" content="website">
+<meta property="og:title" content="学习经历">
+<meta property="og:url" content="http://www.autorun.top/%E5%AD%A6%E4%B9%A0%E7%BB%8F%E5%8E%86/index.html">
+<meta property="og:site_name" content="autorun&#39;s blog">
+<meta property="og:description" content=".learning-journey {     margin: 0;     font-family: &quot;Segoe UI&quot;, &quot;PingFang SC&quot;, sans-serif;     background: #0f172a;     color: #e2e8f0;     line-height: 1.6;   }   .learning-journey header {     te">
+<meta property="og:locale">
+<meta property="og:image" content="http://www.autorun.top/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-16T07:55:45.000Z">
+<meta property="article:modified_time" content="2026-04-16T08:04:55.880Z">
+<meta property="article:author" content="autorun">
+<meta property="article:tag" content="技术博客, 编程, 逆向, 渗透, AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.autorun.top/img/avatar.jpg"><script type="application/ld+json"></script><link rel="shortcut icon" href="/img/avatar.jpg"><link rel="canonical" href="http://www.autorun.top/%E5%AD%A6%E4%B9%A0%E7%BB%8F%E5%8E%86/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//static.cloudflareinsights.com"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const hour = new Date().getHours()
+          const isNight = hour <= 6 || hour >= 22
+          if (theme === undefined) isNight ? activateDarkMode() : activateLightMode()
+          else theme === 'light' ? activateLightMode() : activateDarkMode()
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script defer="defer" data-pjax="data-pjax" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;: &quot;cfut_BIyZCEeKlXiqv6Yn95tSJ9gVbPdGZnfM55arCPak0f9ad7e0&quot;}"></script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":7,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"No results found for: ${query}","hits_stats":"${hits} articles found"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: 'days',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '学习经历',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'page'
+}</script><meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="autorun's blog" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/%E5%AD%A6%E4%B9%A0%E7%BB%8F%E5%8E%86/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学习经历</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">autorun's blog</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> Search</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/%E5%AD%A6%E4%B9%A0%E7%BB%8F%E5%8E%86/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学习经历</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><h1 class="title-seo">学习经历</h1></header><main class="layout hide-aside" id="content-inner"><div id="page"><div class="page-title">学习经历</div><div class="container" id="article-container"><style>
+  .learning-journey {
+    margin: 0;
+    font-family: "Segoe UI", "PingFang SC", sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    line-height: 1.6;
+  }
+  .learning-journey header {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-radius: 12px;
+    margin-bottom: 40px;
+  }
+  .learning-journey header h1 {
+    font-size: 2.8em;
+    margin-bottom: 10px;
+    color: #e2e8f0;
+  }
+  .learning-journey header p {
+    color: #94a3b8;
+  }
+  .learning-journey section {
+    max-width: 1000px;
+    margin: auto;
+    padding: 40px 20px;
+  }
+  .learning-journey h2 {
+    border-left: 4px solid #38bdf8;
+    padding-left: 10px;
+    margin-bottom: 20px;
+    color: #e2e8f0;
+  }
+  .learning-journey .card {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .learning-journey .card h3 {
+    color: #38bdf8;
+    margin-top: 0;
+  }
+  .learning-journey .tag {
+    display: inline-block;
+    background: #38bdf8;
+    color: #0f172a;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin: 2px;
+    font-size: 0.85em;
+  }
+  .learning-journey blockquote {
+    border-left: 3px solid #38bdf8;
+    padding-left: 15px;
+    color: #94a3b8;
+    font-style: italic;
+  }
+  .learning-journey footer {
+    text-align: center;
+    padding: 30px;
+    color: #64748b;
+  }
+</style>
+
+<div class="learning-journey">
+
+<header>
+  <h1>大学阶段性总结</h1>
+  <p>技术成长轨迹 & 学习记录</p>
+</header>
+
+<section>
+  <h2>初二 · 起点</h2>
+  <div class="card">
+    <p>
+      <span class="tag">Python</span>
+      <span class="tag">Java</span>
+      <span class="tag">C</span>
+      <span class="tag">HTML</span>
+    </p>
+    <p>初步接触编程语言,学习基础语法,同时���试简单的 JavaScript 逆向与爬虫。</p>
+    <blockquote>"人一闲下来什么事都做得出来。"</blockquote>
+  </div>
+</section>
+
+<section>
+  <h2>大一 · 上学期</h2>
+
+  <div class="card">
+    <h3>个人博客</h3>
+    <p>Hexo + Butterfly + GitHub + Vercel</p>
+  </div>
+
+  <div class="card">
+    <h3>技术栈扩展</h3>
+    <p>
+      <span class="tag">Rust</span>
+      <span class="tag">Go</span>
+      <span class="tag">JavaScript</span>
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>逆向工程</h3>
+    <p>Frida、IDA、Hook 技术、ARM 汇编、Angr 符号执行</p>
+  </div>
+
+  <div class="card">
+    <h3>网络与安全</h3>
+    <p>TLS 协议、信息收集基础</p>
+  </div>
+
+  <div class="card">
+    <h3>基础设施</h3>
+    <p>Linux、Docker、Git、CMake</p>
+  </div>
+
+  <div class="card">
+    <h3>人工智能</h3>
+    <p>词向量、Transformer 理论</p>
+  </div>
+
+</section>
+
+<section>
+  <h2>大一 · 下学期</h2>
+
+  <div class="card">
+    <h3>安卓逆向进阶</h3>
+    <p>深入 Frida、IDA、LLDB、Unidbg</p>
+  </div>
+
+  <div class="card">
+    <h3>iOS 逆向</h3>
+    <p>环境搭建、砸壳、Swift 分析</p>
+  </div>
+
+  <div class="card">
+    <h3>人工智能应用</h3>
+    <p>ReAct、RAG、MCP、Agent 架构</p>
+  </div>
+
+  <div class="card">
+    <h3>Web 安全</h3>
+    <p>XSS、SQL 注入、CSRF、RCE、XXE 等漏洞学习</p>
+  </div>
+
+</section>
+
+<footer>
+  <p>© 个人成长记录 · 持续进化中</p>
+</footer>
+
+</div>
+</div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By autorun</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.1</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="false"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">Search</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  Loading Database</span></div><div class="local-search-input"><input placeholder="Search for Posts" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.4"></script></div></div></body></html>
