@@ -4,6 +4,7 @@ permalink: /post/vcg-spider.html
 categories: 网络爬虫
 tags: 爬虫
 date: 2025-09-30 20:42:28
+description: 使用 requests + lxml + pypinyin 爬取 VCG 图片，支持本地下载。
 ---
 
 # VCG爬虫
@@ -12,6 +13,8 @@ date: 2025-09-30 20:42:28
 ## 第三方库：requests,lxml,pypinyin
 
 好久没写爬虫了，练练手  
+
+<!-- more -->
 
 ```python
 import requests
