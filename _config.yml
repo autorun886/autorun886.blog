@@ -122,6 +122,13 @@ search:
   content: true
 
 deploy:
-  type: git
-  repo: git@github.com:autorun886/autorun886.blog.git # 推荐使用 SSH 地址
-  branch: main # 或 master，取决于你仓库的默认分支名
+  - type: git
+    repo: git@github.com:autorun886/autorun886.blog.git
+    branch: main
+  - type: qiniu
+    accessKey: -QwCFJ94kUDpUEI8y7PrJXoM1N1EfLJkrOkdfDdf
+    secretKey: w5c9J8w1qr4OhZHOgJWRgIIyhCcuat5jR96MSQ4h
+    bucket: autorun-blog
+    zone: z0
+    prefix: ""
+    isOverwrite: true

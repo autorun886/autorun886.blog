@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "hexo": "^8.0.0",
-    "hexo-deployer-qiniu": "^0.1.2",
+    "hexo-deployer-git": "^4.0.0",
     "hexo-generator-archive": "^2.0.0",
     "hexo-generator-baidu-sitemap": "^0.1.9",
     "hexo-generator-category": "^2.0.0",
@@ -28,6 +28,7 @@
     "hexo-renderer-stylus": "^3.0.1",
     "hexo-server": "^3.0.0",
     "hexo-theme-landscape": "^1.0.0",
-    "hexo-wordcount": "^6.0.1"
+    "hexo-wordcount": "^6.0.1",
+    "qiniu": "^7.15.1"
   }
 }
