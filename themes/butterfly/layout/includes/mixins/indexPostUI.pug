@@ -17,7 +17,7 @@ mixin indexPostUI()
                 if article.cover_type === 'img'
                   img.post-bg(src=url_for(postCover) onerror=`this.onerror=null;this.src='${url_for(theme.error_img.post_page)}'` alt=title)
                 else
-                  div.post-bg(style=`background: ${postCover}`)
+                  div.post-bg(style=`background: ${postCover}` data-title=title)
           .recent-post-info(class=noCover)
             a.article-title(href=url_for(link) title=title)
               if globalPageType === 'home' && (article.top || article.sticky > 0)
