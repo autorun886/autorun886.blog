@@ -143,3 +143,12 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.3); }
 }
+
+/* ===== 暗色模式背景色 ===== */
+[data-theme="dark"] {
+  --global-bg: #545454 !important;
+}
+[data-theme="dark"] body,
+[data-theme="dark"] #web_bg {
+  background: #545454 !important;
+}
