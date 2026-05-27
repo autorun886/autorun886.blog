@@ -10,7 +10,7 @@
   <rights>All rights reserved 2026, autorun</rights>
   <subtitle>一个专注于技术分享的个人博客</subtitle>
   <title>autorun's blog</title>
-  <updated>2026-04-16T12:42:04.874Z</updated>
+  <updated>2026-04-28T07:16:35.558Z</updated>
   <entry>
     <author>
       <name>autorun</name>
@@ -24,7 +24,7 @@
     <published>2025-11-30T15:56:11.000Z</published>
     <summary>在ubuntu上编译Frida，并对其进行Florida魔改以隐藏特征</summary>
     <title>Frida编译与魔改</title>
-    <updated>2026-04-16T12:42:04.874Z</updated>
+    <updated>2026-04-28T07:16:35.558Z</updated>
   </entry>
   <entry>
     <author>
@@ -40,7 +40,7 @@
     <published>2025-09-30T12:42:28.000Z</published>
     <summary>使用 requests + lxml + pypinyin 爬取 VCG 图片，支持本地下载。</summary>
     <title>VCG爬虫</title>
-    <updated>2026-04-16T07:45:15.605Z</updated>
+    <updated>2026-04-28T07:16:53.935Z</updated>
   </entry>
   <entry>
     <author>
@@ -56,6 +56,6 @@
     <published>2025-09-27T07:24:58.000Z</published>
     <summary>my first blog</summary>
     <title>My First Blog</title>
-    <updated>2026-04-16T12:42:07.095Z</updated>
+    <updated>2026-04-28T07:17:18.385Z</updated>
   </entry>
 </feed>
