@@ -8,9 +8,9 @@
   <link href="http://www.autorun.top/" rel="alternate"/>
   <link href="http://www.autorun.top/atom.xml" rel="self"/>
   <rights>All rights reserved 2026, autorun</rights>
-  <subtitle>一个专注于技术分享的个人博客</subtitle>
+  <subtitle>记录逆向、安全、AI 与爬虫实战的可复现技术博客</subtitle>
   <title>autorun's blog</title>
-  <updated>2026-04-28T07:16:35.558Z</updated>
+  <updated>2026-07-19T03:21:41.391Z</updated>
   <entry>
     <author>
       <name>autorun</name>
@@ -22,9 +22,9 @@
     <id>http://www.autorun.top/post/frida-hide.html</id>
     <link href="http://www.autorun.top/post/frida-hide.html"/>
     <published>2025-11-30T15:56:11.000Z</published>
-    <summary>在ubuntu上编译Frida，并对其进行Florida魔改以隐藏特征</summary>
+    <summary>在 Ubuntu 上编译 Frida 17.4.0，并应用 Florida patch 隐藏特征</summary>
     <title>Frida编译与魔改</title>
-    <updated>2026-04-28T07:16:35.558Z</updated>
+    <updated>2026-07-19T03:21:41.391Z</updated>
   </entry>
   <entry>
     <author>
