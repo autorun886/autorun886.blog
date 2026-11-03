@@ -1384,6 +1384,7 @@ button:focus-visible,
 }
 
 #recent-posts .recent-post-item {
+  position: relative;
   min-height: 0;
   padding: 0;
   border: 1px solid var(--blog-rule);
@@ -1394,8 +1395,9 @@ button:focus-visible,
 
 #recent-posts .recent-post-item:hover {
   border-color: #cbc8e5;
-  background: var(--blog-surface) !important;
+  background: #fff !important;
   box-shadow: 0 5px 16px rgba(32, 35, 43, 0.07) !important;
+  transform: none !important;
 }
 
 #recent-posts .recent-post-item > .recent-post-info.no-cover {
