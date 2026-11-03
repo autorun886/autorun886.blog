@@ -1372,6 +1372,46 @@ button:focus-visible,
   display: none !important;
 }
 
+/* Centered archive cards with a clear boundary between entries. */
+#recent-posts {
+  width: min(940px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+#recent-posts .recent-post-items {
+  display: grid;
+  gap: 18px;
+}
+
+#recent-posts .recent-post-item {
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--blog-rule);
+  border-radius: 8px !important;
+  background: var(--blog-surface) !important;
+  box-shadow: 0 2px 8px rgba(32, 35, 43, 0.035) !important;
+}
+
+#recent-posts .recent-post-item:hover {
+  border-color: #cbc8e5;
+  background: var(--blog-surface) !important;
+  box-shadow: 0 5px 16px rgba(32, 35, 43, 0.07) !important;
+}
+
+#recent-posts .recent-post-item > .recent-post-info.no-cover {
+  padding: 26px 30px;
+}
+
+@media (max-width: 768px) {
+  #recent-posts {
+    width: min(100% - 28px, 640px);
+  }
+
+  #recent-posts .recent-post-item > .recent-post-info.no-cover {
+    padding: 22px 20px;
+  }
+}
+
 /* The aside is a reading aid on posts; archive metadata should not compete
    with the homepage and standalone pages. */
 body:not(.page-type-post) #aside-content,
