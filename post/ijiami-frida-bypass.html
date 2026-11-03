@@ -1,0 +1,368 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>某加密企业版 Frida 检测绕过 | autorun's blog</title><meta name="author" content="autorun"><meta name="copyright" content="autorun"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="某加密企业版的 Frida 检测与绕过分析。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="某加密企业版 Frida 检测绕过">
+<meta property="og:url" content="http://www.autorun.top/post/ijiami-frida-bypass.html">
+<meta property="og:site_name" content="autorun&#39;s blog">
+<meta property="og:description" content="某加密企业版的 Frida 检测与绕过分析。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.autorun.top/img/avatar-card.jpg">
+<meta property="article:published_time" content="2026-08-25T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-03T02:57:17.807Z">
+<meta property="article:author" content="autorun">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="加固">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.autorun.top/img/avatar-card.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "某加密企业版 Frida 检测绕过",
+  "url": "http://www.autorun.top/post/ijiami-frida-bypass.html",
+  "image": "http://www.autorun.top/img/avatar-card.jpg",
+  "datePublished": "2026-08-25T05:00:00.000Z",
+  "dateModified": "2026-11-03T02:57:17.807Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "autorun",
+      "url": "https://github.com/autorun886"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/avatar.jpg"><link rel="canonical" href="http://www.autorun.top/post/ijiami-frida-bypass.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//static.cloudflareinsights.com"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.9/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const hour = new Date().getHours()
+          const isNight = hour <= 6 || hour >= 22
+          if (theme === undefined) isNight ? activateDarkMode() : activateLightMode()
+          else theme === 'light' ? activateLightMode() : activateDarkMode()
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script defer="defer" data-pjax="data-pjax" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;: &quot;cfut_BIyZCEeKlXiqv6Yn95tSJ9gVbPdGZnfM55arCPak0f9ad7e0&quot;}"></script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":7,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":400,"highlightFullpage":true,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#6C5CE7","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '某加密企业版 Frida 检测绕过',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/custom.css?v=20260802-research-console"><meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="autorun's blog" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar-card.jpg" onerror="this.onerror=null;this.src='http://cdn.autorun.top/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">autorun's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">某加密企业版 Frida 检测绕过</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">某加密企业版 Frida 检测绕过</h1><p class="post-description">某加密企业版的 Frida 检测与绕过分析。</p><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-25T05:00:00.000Z" title="发表于 2026-08-25 13:00:00">2026-08-25</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-03T02:57:17.807Z" title="更新于 2026-11-03 10:57:17">2026-11-03</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AE%89%E5%8D%93%E9%80%86%E5%90%91/">安卓逆向</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">3k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>13分钟</span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="某加密企业版-Frida-检测绕过"><a href="#某加密企业版-Frida-检测绕过" class="headerlink" title="某加密企业版 Frida 检测绕过"></a>某加密企业版 Frida 检测绕过</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>故事的起因源自于我们英语老师用这个软件签到，就想着能不能 … 嘿嘿 [手动doge]</p>
+<p>正巧最近想学习一下安卓加固壳</p>
+<p>效仿 OrientalGlass 大佬的搞法，把我平时收藏的那些逆向相关的优质文章总结成一个 AI 知识库，以供 AI 一把梭哈，效果很可观</p>
+<p>工具:</p>
+<ul>
+<li>Pixel 6A</li>
+<li>Frida 17.8.3 (因为我root机用16版本容易崩，需注意API兼容问题)</li>
+<li>Codex (用的GPT5.5，不容易报cyber)</li>
+<li>无名侠的 IDA NO MCP</li>
+</ul>
+<p>目标APK：cn.unipus.cloud</p>
+<p><strong>声明:</strong></p>
+<ol>
+<li><strong>本文所述内容仅为技术研究与学习交流之目的, 所分析的 App 版权归其所属公司所有</strong></li>
+<li><strong>作者未对任何 App 进行非法篡改, 破解, 数据窃取或商业利用, 亦不鼓励或支持任何违反法律法规的行为</strong></li>
+<li><strong>读者不得将本文内容用于任何非法用途, 由此产生的一切法律责任由使用者自行承担</strong></li>
+<li><strong>请遵守《中华人民共和国网络安全法》及相关法律法规</strong></li>
+</ol>
+<h2 id="事先准备"><a href="#事先准备" class="headerlink" title="事先准备"></a>事先准备</h2><p>互联网上关于该壳的信息搜集</p>
+<p>目标APK</p>
+<p>Root机环境下能否正常使用目标APK</p>
+<h2 id="Frida-一把梭"><a href="#Frida-一把梭" class="headerlink" title="Frida 一把梭"></a>Frida 一把梭</h2><p>先 hook 一下 dlopen，定位一下反 Frida 逻辑大概在哪个文件里面</p>
+<p>每次 dlopen enter前可以尝试 sleep 两秒应对检测逻辑处决时间滞后问题</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="variable constant_">SYMBOLS</span> = [<span class="string">&quot;dlopen&quot;</span>, <span class="string">&quot;__loader_dlopen&quot;</span>, <span class="string">&quot;android_dlopen_ext&quot;</span>];</span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">LOOKUP_MODULES</span> = [<span class="string">&quot;libc.so&quot;</span>, <span class="string">&quot;libdl.so&quot;</span>, <span class="string">&quot;linker64&quot;</span>, <span class="string">&quot;linker&quot;</span>];</span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">SLEEP_SECONDS</span> = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">let</span> enterCount = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">cstr</span>(<span class="params">p</span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> p.<span class="title function_">isNull</span>() ? <span class="literal">null</span> : p.<span class="title function_">readCString</span>();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (_) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;&lt;bad-cstr&gt;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">addrName</span>(<span class="params">p</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> m = <span class="title class_">Process</span>.<span class="title function_">findModuleByAddress</span>(p);</span><br><span class="line">    <span class="keyword">return</span> m ? m.<span class="property">name</span> + <span class="string">&quot;+0x&quot;</span> + p.<span class="title function_">sub</span>(m.<span class="property">base</span>).<span class="title function_">toString</span>(<span class="number">16</span>) : p.<span class="title function_">toString</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">exportByName</span>(<span class="params">name</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">const</span> moduleName <span class="keyword">of</span> <span class="variable constant_">LOOKUP_MODULES</span>) &#123;</span><br><span class="line">        <span class="keyword">const</span> m = <span class="title class_">Process</span>.<span class="title function_">findModuleByName</span>(moduleName);</span><br><span class="line">        <span class="keyword">if</span> (m === <span class="literal">null</span>) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">const</span> p = m.<span class="title function_">findExportByName</span>(name);</span><br><span class="line">        <span class="keyword">if</span> (p !== <span class="literal">null</span>) <span class="keyword">return</span> p;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="title class_">Module</span>.<span class="title function_">findGlobalExportByName</span>(name);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">hook</span>(<span class="params">name</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> p = <span class="title function_">exportByName</span>(name);</span><br><span class="line">    <span class="keyword">if</span> (p === <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;[miss] &quot;</span> + name);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="title class_">Interceptor</span>.<span class="title function_">attach</span>(p, &#123;</span><br><span class="line">        <span class="title function_">onEnter</span>(<span class="params">args</span>) &#123;</span><br><span class="line">            enterCount++;</span><br><span class="line">            <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">            <span class="variable language_">this</span>.<span class="property">path</span> = <span class="title function_">cstr</span>(args[<span class="number">0</span>]);</span><br><span class="line">            <span class="variable language_">this</span>.<span class="property">flags</span> = args[<span class="number">1</span>];</span><br><span class="line">            <span class="variable language_">this</span>.<span class="property">caller</span> = <span class="title function_">addrName</span>(<span class="variable language_">this</span>.<span class="property">returnAddress</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (enterCount &gt; <span class="number">1</span>) &#123;</span><br><span class="line">                <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;[dlopen:pre-sleep] &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;count=&quot;</span> + enterCount +</span><br><span class="line">                    <span class="string">&quot; tid=&quot;</span> + <span class="title class_">Process</span>.<span class="title function_">getCurrentThreadId</span>() +</span><br><span class="line">                    <span class="string">&quot; fn=&quot;</span> + name +</span><br><span class="line">                    <span class="string">&quot; caller=&quot;</span> + <span class="variable language_">this</span>.<span class="property">caller</span> +</span><br><span class="line">                    <span class="string">&quot; path=&quot;</span> + <span class="variable language_">this</span>.<span class="property">path</span> +</span><br><span class="line">                    <span class="string">&quot; flags=&quot;</span> + <span class="variable language_">this</span>.<span class="property">flags</span> +</span><br><span class="line">                    <span class="string">&quot; sleep=&quot;</span> + <span class="variable constant_">SLEEP_SECONDS</span> + <span class="string">&quot;s&quot;</span>);</span><br><span class="line">                <span class="title class_">Thread</span>.<span class="title function_">sleep</span>(<span class="variable constant_">SLEEP_SECONDS</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;[dlopen:enter] &quot;</span> +</span><br><span class="line">                <span class="string">&quot;tid=&quot;</span> + <span class="title class_">Process</span>.<span class="title function_">getCurrentThreadId</span>() +</span><br><span class="line">                <span class="string">&quot; fn=&quot;</span> + name +</span><br><span class="line">                <span class="string">&quot; caller=&quot;</span> + <span class="variable language_">this</span>.<span class="property">caller</span> +</span><br><span class="line">                <span class="string">&quot; path=&quot;</span> + <span class="variable language_">this</span>.<span class="property">path</span> +</span><br><span class="line">                <span class="string">&quot; flags=&quot;</span> + <span class="variable language_">this</span>.<span class="property">flags</span>);</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="title function_">onLeave</span>(<span class="params">retval</span>) &#123;</span><br><span class="line">            <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;[dlopen:leave] &quot;</span> +</span><br><span class="line">                <span class="string">&quot;fn=&quot;</span> + <span class="variable language_">this</span>.<span class="property">name</span> +</span><br><span class="line">                <span class="string">&quot; ret=&quot;</span> + retval +</span><br><span class="line">                <span class="string">&quot; path=&quot;</span> + <span class="variable language_">this</span>.<span class="property">path</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;[hook] &quot;</span> + name + <span class="string">&quot; @ &quot;</span> + p);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">setImmediate</span>(<span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable constant_">SYMBOLS</span>.<span class="title function_">forEach</span>(hook);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/./%E7%88%B1%E5%8A%A0%E5%AF%86Frida.assets/dlopen.png"></p>
+<p>定位到处决逻辑处于 <code>libexec.so</code> 中</p>
+<p>知道了处决逻辑的位置后，想办法去处理上游的检测逻辑</p>
+<h2 id="修复-libexec-so"><a href="#修复-libexec-so" class="headerlink" title="修复 libexec.so"></a>修复 libexec.so</h2><p>IDA 打开 libexec.so 瞟一眼</p>
+<p>发现大段被加密，疑似标准&#x2F;轻改 UPX</p>
+<p><img src="/./%E7%88%B1%E5%8A%A0%E5%AF%86Frida.assets/image-20260825103641380.png" alt="image-20260825103641380"></p>
+<p>可以通过纯静态分析 <code>.init_proc</code> 函数一路追踪过去，基本上一路交给 AI 就可以完成</p>
+<p>这里推荐用动态dump的方式，用 Frida attach 先 dump 出 so ，再通过 Sofixer 修复so结构，这里可以用这位佬的脚本自动完成</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/lasting-yang/frida_dump">https://github.com/lasting-yang/frida_dump</a></p>
+<p>一次不行就多试几次，在检测逻辑轮询的空窗期把 so dump 出来</p>
+<h2 id="trace"><a href="#trace" class="headerlink" title="trace"></a>trace</h2><p>接下来就通过 Frida 定位处决逻辑，顺着处决点摸到上游的检测逻辑</p>
+<p>可以直接让 AI 写 trace 脚本</p>
+<p>这边推荐可以先用一些开源的IDA插件先把trace脚本生成出来后再让 AI 改</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/oacia/stalker_trace_so">https://github.com/oacia/stalker_trace_so</a></p>
+<p>在该样例中有一些小 bug 导致无法正常执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">主要原因是原版本的 Stalker 日志写在 transform() 里 console.log，那是 block 编译阶段，不是运行到函数时；所以看起来 trace 不准或没效果</span><br><span class="line"></span><br><span class="line">另一个问题是Process.getModuleByName(so_name) 在 libexec.so 还没加载时会直接抛异常</span><br></pre></td></tr></table></figure>
+
+<p>让 AI 修一下就行</p>
+<p><img src="/./%E7%88%B1%E5%8A%A0%E5%AF%86Frida.assets/image-20260825120535423.png" alt="image-20260825120535423"></p>
+<p>如果处决逻辑有滞后导致定位处决函数难以精确，可以让AI改一下，在 trace 脚本每一个函数执行前中加入一段 sleep 逻辑，如果 sleep 逻辑本身容易导致程序崩溃</p>
+<p>可以参照 OrientalGlass 文章提过中的思路，进行二分查找</p>
+<p>基本上能够收敛到处决函数；随后针对关键返回值写 hook 脚本记录调用者、返回值和状态位，再结合静态分析向上追溯检测点位</p>
+<p>若仍然难以定位，可以尝试通过 KPM 模块或者 eBPF程序 进行 trace 工作，对比Frida trace函数链是在哪里出现了路径分叉，再往上追溯检测逻辑，对于部分的反调试逻辑有奇效</p>
+<h2 id="最终定制化脚本"><a href="#最终定制化脚本" class="headerlink" title="最终定制化脚本"></a>最终定制化脚本</h2><p>确认的关键函数对应关系：</p>
+<table>
+<thead>
+<tr>
+<th>偏移</th>
+<th>IDA 函数&#x2F;位置</th>
+<th>在脚本里的意义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0x64440</code></td>
+<td><code>sub_64440</code></td>
+<td>JNI 调 <code>Debug.isDebuggerConnected()</code>；返回 1 会写状态并表示检测命中。脚本 hook 后非零返回改 0。</td>
+</tr>
+<tr>
+<td><code>0x5cc98</code></td>
+<td>落在 <code>sub_5C9E8</code> 内</td>
+<td>note 里标为 gate 链 <code>ops[0x00]</code> thunk；IDA 当前不是独立函数起点。脚本仍按该入口尝试 hook。</td>
+</tr>
+<tr>
+<td><code>0x5ccf8</code></td>
+<td><code>sub_5CCF8</code></td>
+<td>构造期 VM 调度器：调用 <code>sub_D9304(..., 0x102770, ...)</code> 跑 VM 字节码，然后用 <code>sub_DDF94</code> 取结果。返回 1 表示 gate 检测命中。</td>
+</tr>
+<tr>
+<td><code>0xddf94</code></td>
+<td><code>sub_DDF94</code></td>
+<td>VM 结果栈提取器。它也被 <code>JNI_OnLoad</code> 用来返回 <code>JNI_VERSION</code>，所以脚本只在 caller 落在 <code>0x5ccf8..0x5ce00</code> 时改 0，避免把 JNI 初始化弄坏。</td>
+</tr>
+<tr>
+<td><code>0x5dfe4</code></td>
+<td><code>sub_5DFE4</code></td>
+<td>A-table 的 <code>A[7]</code>，直接 syscall 打开&#x2F;读取 <code>/proc/self/status</code>，解析 <code>TracerPid</code>。这是 spawn 根因链里的关键早期检测。</td>
+</tr>
+<tr>
+<td><code>0x63c10</code></td>
+<td><code>sub_63C10</code></td>
+<td>A-table 的 <code>A[4]</code>，读取 <code>/proc/self/wchan</code>，识别 <code>sys_epoll</code>、<code>ptrace_stop</code>，返回 0&#x2F;1&#x2F;2。</td>
+</tr>
+<tr>
+<td><code>0x78b98</code></td>
+<td><code>sub_78B98</code></td>
+<td>A-table 的 <code>A[31]</code>，字符串比较 helper；在 <code>A[7]</code> 里用于匹配 <code>TracerPid</code> 行名。</td>
+</tr>
+<tr>
+<td><code>0x62d80</code></td>
+<td><code>sub_62D80</code></td>
+<td>maps&#x2F;Frida 检测器，扫描 <code>/proc/self/maps</code> 风格内容和可执行段特征。脚本直接 patch 成 <code>mov w0,#0; ret</code>。</td>
+</tr>
+<tr>
+<td><code>0x6fcb4</code></td>
+<td><code>sub_6FABC</code> 内失败块</td>
+<td>第一组终止 caller。脚本把块内入口&#x2F;BL 位置改成 B，跳过写状态、调用 <code>sub_5C9E8</code> 和清零路径。</td>
+</tr>
+<tr>
+<td><code>0x712cc</code></td>
+<td><code>sub_70F80</code> 内失败块</td>
+<td>第二组终止 caller。IDA 反编译失败，但 process 里 CFG 证据显示它有多入口，脚本分别 patch 三个入口&#x2F;BL 点跳到继续路径。</td>
+</tr>
+<tr>
+<td><code>0x40c2c</code></td>
+<td><code>sub_40BF4</code> 内返回地址</td>
+<td>raw-clone mmap 安全窗口标识。只有 caller 是 <code>libexec.so+0x40c2c</code>、length <code>0x800000</code>、flags <code>0x20022</code> 时才批量安装 hook&#x2F;patch。</td>
+</tr>
+<tr>
+<td><code>0x4f464</code></td>
+<td><code>sub_4F408</code> 内 <code>pthread_create</code> caller</td>
+<td>晚期同步窗口：当这里创建线程，且 start routine 是 <code>0x4f1b0</code> 时，再补一次关键 hook&#x2F;patch。</td>
+</tr>
+<tr>
+<td><code>0x4f1b0</code></td>
+<td><code>sub_4F1B0</code></td>
+<td>watchdog&#x2F;回调包装线程入口；执行 <code>sub_4F508()</code> 后调用参数对象里的回调。它是终止前稳定出现的线程链入口。</td>
+</tr>
+<tr>
+<td><code>0xeefe0</code></td>
+<td>全局数据 <code>off_EEFE0</code></td>
+<td>全局状态指针槽。脚本从这里追到 state，再持续清 <code>state+0x338</code>、<code>+0x1d1</code>、<code>+0x33e</code>。其中 <code>+0x338</code> 是 VM 会写成检测状态 17 的标记。</td>
+</tr>
+</tbody></table>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">PROBE_MODE</span> = <span class="string">&quot;smart&quot;</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">TARGET_MODULE</span> = <span class="string">&quot;libexec.so&quot;</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">RETURN_ZERO</span> = <span class="number">0x52800000</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">RET</span> = <span class="number">0xd65f03c0</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">STATE_SLOT</span> = <span class="number">0xeefe0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// sub_5CCF8 returns to sub_71570 chain — safe to override</span></span><br><span class="line"><span class="comment">// JNI_OnLoad returns JNI_VERSION — DON&#x27;T override</span></span><br><span class="line"><span class="keyword">const</span> <span class="title class_">DDF94</span>_OFFSET = <span class="number">0xddf94</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">CALLERS_TO_OVERRIDE</span> = [<span class="number">0x5ccf8</span>]; <span class="comment">// only override when called from sub_5CCF8</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Hook all detection targets</span></span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">HOOK_TARGETS</span> = [<span class="number">0x64440</span>, <span class="number">0x5cc98</span>, <span class="number">0x5ccf8</span>, <span class="number">0x5dfe4</span>, <span class="number">0x63c10</span>, <span class="number">0x78b98</span>];</span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">PATCH_TARGETS</span> = [<span class="number">0x62d80</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> seq = <span class="number">0</span>, mod = <span class="literal">null</span>, mc = <span class="number">0</span>, modMc = <span class="number">0</span>, callsDone = <span class="literal">false</span>, statePtr = <span class="literal">null</span>;</span><br><span class="line"><span class="keyword">const</span> hooked = &#123;&#125;;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">ev</span>(<span class="params">e, d</span>) &#123; <span class="title function_">send</span>(<span class="title class_">Object</span>.<span class="title function_">assign</span>(&#123; <span class="attr">event</span>: e, <span class="attr">mode</span>: <span class="variable constant_">PROBE_MODE</span>, <span class="attr">s</span>: ++seq &#125;, d || &#123;&#125;)); &#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">mo</span>(<span class="params">a</span>) &#123; <span class="keyword">try</span> &#123; <span class="keyword">const</span> m = <span class="title class_">Process</span>.<span class="title function_">findModuleByAddress</span>(a); <span class="keyword">return</span> m ? &#123; <span class="attr">n</span>: m.<span class="property">name</span>, <span class="attr">o</span>: <span class="title class_">Number</span>(a.<span class="title function_">sub</span>(m.<span class="property">base</span>)) &#125; : <span class="literal">null</span>; &#125; <span class="keyword">catch</span> (e) &#123; <span class="keyword">return</span> <span class="literal">null</span>; &#125; &#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">isInside</span>(<span class="params">a, m</span>) &#123; <span class="keyword">return</span> a.<span class="title function_">compare</span>(m.<span class="property">base</span>) &gt;= <span class="number">0</span> &amp;&amp; a.<span class="title function_">compare</span>(m.<span class="property">base</span>.<span class="title function_">add</span>(m.<span class="property">size</span>)) &lt; <span class="number">0</span>; &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">keepClean</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (!mod) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">if</span> (!statePtr || statePtr.<span class="title function_">isNull</span>()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">const</span> ss = mod.<span class="property">base</span>.<span class="title function_">add</span>(<span class="variable constant_">STATE_SLOT</span>).<span class="title function_">readPointer</span>();</span><br><span class="line">            <span class="keyword">if</span> (!ss.<span class="title function_">isNull</span>()) &#123; <span class="keyword">const</span> st = ss.<span class="title function_">readPointer</span>(); <span class="keyword">if</span> (!st.<span class="title function_">isNull</span>()) statePtr = st; &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (e) &#123;&#125;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (statePtr.<span class="title function_">add</span>(<span class="number">0x338</span>).<span class="title function_">readU32</span>() !== <span class="number">0</span>) &#123; statePtr.<span class="title function_">add</span>(<span class="number">0x338</span>).<span class="title function_">writeU32</span>(<span class="number">0</span>); <span class="title function_">ev</span>(<span class="string">&quot;CL&quot;</span>); &#125;</span><br><span class="line">        <span class="keyword">if</span> (statePtr.<span class="title function_">add</span>(<span class="number">0x1d1</span>).<span class="title function_">readU8</span>() !== <span class="number">0</span>) statePtr.<span class="title function_">add</span>(<span class="number">0x1d1</span>).<span class="title function_">writeU8</span>(<span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (statePtr.<span class="title function_">add</span>(<span class="number">0x33e</span>).<span class="title function_">readU8</span>() !== <span class="number">0</span>) statePtr.<span class="title function_">add</span>(<span class="number">0x33e</span>).<span class="title function_">writeU8</span>(<span class="number">0</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e) &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">hookOne</span>(<span class="params">off</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> k = <span class="string">&quot;h&quot;</span> + off.<span class="title function_">toString</span>(<span class="number">16</span>);</span><br><span class="line">    <span class="keyword">if</span> (hooked[k] || !mod) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> a = mod.<span class="property">base</span>.<span class="title function_">add</span>(off);</span><br><span class="line">        <span class="keyword">const</span> p = a.<span class="title function_">readU32</span>();</span><br><span class="line">        <span class="keyword">if</span> (p === <span class="number">0</span> || p === <span class="number">0xffffffff</span> || p === <span class="variable constant_">RETURN_ZERO</span>) <span class="keyword">return</span>;</span><br><span class="line">        <span class="title class_">Interceptor</span>.<span class="title function_">attach</span>(a, &#123;</span><br><span class="line">            <span class="title function_">onEnter</span>(<span class="params"></span>) &#123; <span class="title function_">keepClean</span>(); <span class="keyword">if</span> (off === <span class="title class_">DDF94</span>_OFFSET) <span class="variable language_">this</span>.<span class="property">_ret</span> = <span class="title function_">mo</span>(<span class="variable language_">this</span>.<span class="property">returnAddress</span>); &#125;,</span><br><span class="line">            <span class="title function_">onLeave</span>(<span class="params">rv</span>) &#123;</span><br><span class="line">                <span class="keyword">const</span> v = rv.<span class="title function_">toUInt32</span>();</span><br><span class="line">                <span class="keyword">if</span> (v !== <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="keyword">let</span> override = <span class="literal">true</span>;</span><br><span class="line">                    <span class="comment">// For sub_DDF94: only override for sub_5CCF8 callers, keep all others</span></span><br><span class="line">                    <span class="keyword">if</span> (off === <span class="title class_">DDF94</span>_OFFSET &amp;&amp; <span class="variable language_">this</span>.<span class="property">_ret</span>) &#123;</span><br><span class="line">                        <span class="keyword">const</span> is5cc = (<span class="variable language_">this</span>.<span class="property">_ret</span>.<span class="property">o</span> &gt;= <span class="number">0x5ccf8</span> &amp;&amp; <span class="variable language_">this</span>.<span class="property">_ret</span>.<span class="property">o</span> &lt; <span class="number">0x5ce00</span>);</span><br><span class="line">                        <span class="keyword">if</span> (!is5cc) override = <span class="literal">false</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (override) &#123; rv.<span class="title function_">replace</span>(<span class="title function_">ptr</span>(<span class="number">0</span>)); &#125;</span><br><span class="line">                    <span class="keyword">else</span> &#123; <span class="title function_">ev</span>(<span class="string">&quot;SKIP&quot;</span>, &#123; <span class="attr">off</span>: <span class="string">&quot;0x&quot;</span> + off.<span class="title function_">toString</span>(<span class="number">16</span>), <span class="attr">rv</span>: v, <span class="attr">ret</span>: <span class="variable language_">this</span>.<span class="property">_ret</span> ? <span class="variable language_">this</span>.<span class="property">_ret</span>.<span class="property">n</span> + <span class="string">&quot;+0x&quot;</span> + <span class="variable language_">this</span>.<span class="property">_ret</span>.<span class="property">o</span>.<span class="title function_">toString</span>(<span class="number">16</span>) : <span class="string">&quot;?&quot;</span> &#125;); &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="title function_">keepClean</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        hooked[k] = <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e) &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">patchOne</span>(<span class="params">off</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> k = <span class="string">&quot;p&quot;</span> + off.<span class="title function_">toString</span>(<span class="number">16</span>);</span><br><span class="line">    <span class="keyword">if</span> (hooked[k] || !mod) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> a = mod.<span class="property">base</span>.<span class="title function_">add</span>(off);</span><br><span class="line">        <span class="keyword">if</span> (a.<span class="title function_">readU32</span>() === <span class="variable constant_">RETURN_ZERO</span>) &#123; hooked[k] = <span class="literal">true</span>; <span class="keyword">return</span>; &#125;</span><br><span class="line">        <span class="title class_">Memory</span>.<span class="title function_">patchCode</span>(a, <span class="number">8</span>, <span class="keyword">function</span> (<span class="params">c</span>) &#123; <span class="keyword">const</span> w = <span class="keyword">new</span> <span class="title class_">Arm64Writer</span>(c, &#123; <span class="attr">pc</span>: a &#125;); w.<span class="title function_">putInstruction</span>(<span class="variable constant_">RETURN_ZERO</span>); w.<span class="title function_">putInstruction</span>(<span class="variable constant_">RET</span>); w.<span class="title function_">flush</span>(); &#125;);</span><br><span class="line">        hooked[k] = <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e) &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">patchCallers</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (callsDone || !mod) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        [&#123; <span class="attr">b</span>: <span class="number">0x6fcb4</span>, <span class="attr">p</span>: [&#123; <span class="attr">i</span>: <span class="number">0</span>, <span class="attr">v</span>: <span class="number">0x14000007</span> &#125;, &#123; <span class="attr">i</span>: <span class="number">2</span>, <span class="attr">v</span>: <span class="number">0x14000005</span> &#125;] &#125;,</span><br><span class="line">         &#123; <span class="attr">b</span>: <span class="number">0x712cc</span>, <span class="attr">p</span>: [&#123; <span class="attr">i</span>: <span class="number">0</span>, <span class="attr">v</span>: <span class="number">0x1400000a</span> &#125;, &#123; <span class="attr">i</span>: <span class="number">3</span>, <span class="attr">v</span>: <span class="number">0x14000007</span> &#125;, &#123; <span class="attr">i</span>: <span class="number">5</span>, <span class="attr">v</span>: <span class="number">0x14000005</span> &#125;] &#125;]</span><br><span class="line">        .<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">c</span>) &#123; c.<span class="property">p</span>.<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">p</span>) &#123;</span><br><span class="line">            <span class="keyword">const</span> a = mod.<span class="property">base</span>.<span class="title function_">add</span>(c.<span class="property">b</span> + p.<span class="property">i</span> * <span class="number">4</span>);</span><br><span class="line">            <span class="keyword">if</span> (a.<span class="title function_">readU32</span>() === p.<span class="property">v</span>) <span class="keyword">return</span>;</span><br><span class="line">            <span class="title class_">Memory</span>.<span class="title function_">patchCode</span>(a, <span class="number">4</span>, <span class="keyword">function</span> (<span class="params">code</span>) &#123; <span class="keyword">const</span> w = <span class="keyword">new</span> <span class="title class_">Arm64Writer</span>(code, &#123; <span class="attr">pc</span>: a &#125;); w.<span class="title function_">putInstruction</span>(p.<span class="property">v</span>); w.<span class="title function_">flush</span>(); &#125;);</span><br><span class="line">        &#125;); &#125;);</span><br><span class="line">        callsDone = <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e) &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> mp = <span class="title class_">Module</span>.<span class="title function_">findGlobalExportByName</span>(<span class="string">&quot;malloc&quot;</span>) || <span class="title class_">Module</span>.<span class="title function_">findGlobalExportByName</span>(<span class="string">&quot;__libc_malloc&quot;</span>);</span><br><span class="line"><span class="keyword">if</span> (mp) <span class="title class_">Interceptor</span>.<span class="title function_">attach</span>(mp, &#123; <span class="title function_">onEnter</span>(<span class="params"></span>) &#123;</span><br><span class="line">    mc++;</span><br><span class="line">    <span class="keyword">if</span> (!mod) &#123; <span class="keyword">const</span> m = <span class="title class_">Process</span>.<span class="title function_">findModuleByName</span>(<span class="variable constant_">TARGET_MODULE</span>); <span class="keyword">if</span> (m) &#123; mod = m; modMc = mc; <span class="title function_">ev</span>(<span class="string">&quot;F&quot;</span>); &#125; <span class="keyword">return</span>; &#125;</span><br><span class="line">    <span class="title function_">keepClean</span>();</span><br><span class="line">    <span class="keyword">if</span> (mc &lt;= modMc + <span class="number">1</span>) <span class="keyword">return</span>;</span><br><span class="line">    <span class="variable constant_">HOOK_TARGETS</span>.<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">o</span>) &#123; <span class="title function_">hookOne</span>(o); &#125;);</span><br><span class="line">    <span class="title function_">hookOne</span>(<span class="title class_">DDF94</span>_OFFSET);</span><br><span class="line">    <span class="variable constant_">PATCH_TARGETS</span>.<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">o</span>) &#123; <span class="title function_">patchOne</span>(o); &#125;);</span><br><span class="line">    <span class="keyword">if</span> (!callsDone &amp;&amp; <span class="title class_">Object</span>.<span class="title function_">keys</span>(hooked).<span class="property">length</span> &gt;= <span class="number">6</span>) <span class="title function_">patchCallers</span>();</span><br><span class="line">&#125;&#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">hookRaw</span>(<span class="params"></span>) &#123; <span class="title class_">Interceptor</span>.<span class="title function_">attach</span>(<span class="title class_">Module</span>.<span class="title function_">findGlobalExportByName</span>(<span class="string">&quot;mmap&quot;</span>), &#123;</span><br><span class="line">    <span class="title function_">onEnter</span>(<span class="params">args</span>) &#123; <span class="variable language_">this</span>.<span class="property">cl</span> = <span class="title function_">mo</span>(<span class="variable language_">this</span>.<span class="property">returnAddress</span>); <span class="variable language_">this</span>.<span class="property">nl</span> = <span class="title class_">Number</span>(args[<span class="number">1</span>]); <span class="variable language_">this</span>.<span class="property">fl</span> = args[<span class="number">3</span>].<span class="title function_">toInt32</span>(); <span class="title function_">keepClean</span>(); &#125;,</span><br><span class="line">    <span class="title function_">onLeave</span>(<span class="params">rv</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!<span class="variable language_">this</span>.<span class="property">cl</span> || <span class="variable language_">this</span>.<span class="property">cl</span>.<span class="property">n</span> !== <span class="variable constant_">TARGET_MODULE</span> || <span class="variable language_">this</span>.<span class="property">cl</span>.<span class="property">o</span> !== <span class="number">0x40c2c</span> || <span class="variable language_">this</span>.<span class="property">nl</span> !== <span class="number">0x800000</span> || <span class="variable language_">this</span>.<span class="property">fl</span> !== <span class="number">0x20022</span> || rv.<span class="title function_">equals</span>(<span class="title function_">ptr</span>(<span class="string">&quot;-1&quot;</span>))) <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">if</span> (!mod) mod = <span class="title class_">Process</span>.<span class="title function_">findModuleByName</span>(<span class="variable constant_">TARGET_MODULE</span>);</span><br><span class="line">        <span class="keyword">if</span> (mod) &#123; <span class="variable constant_">HOOK_TARGETS</span>.<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">o</span>) &#123; <span class="title function_">hookOne</span>(o); &#125;); <span class="title function_">hookOne</span>(<span class="title class_">DDF94</span>_OFFSET); <span class="variable constant_">PATCH_TARGETS</span>.<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">o</span>) &#123; <span class="title function_">patchOne</span>(o); &#125;); <span class="title function_">patchCallers</span>(); &#125;</span><br><span class="line">        <span class="title function_">keepClean</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;); &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">hookPth</span>(<span class="params"></span>) &#123; <span class="title class_">Interceptor</span>.<span class="title function_">attach</span>(<span class="title class_">Module</span>.<span class="title function_">findGlobalExportByName</span>(<span class="string">&quot;pthread_create&quot;</span>), &#123;</span><br><span class="line">    <span class="title function_">onEnter</span>(<span class="params">args</span>) &#123;</span><br><span class="line">        <span class="title function_">keepClean</span>();</span><br><span class="line">        <span class="keyword">const</span> c = <span class="title function_">mo</span>(<span class="variable language_">this</span>.<span class="property">returnAddress</span>);</span><br><span class="line">        <span class="keyword">if</span> (!c || c.<span class="property">n</span> !== <span class="variable constant_">TARGET_MODULE</span> || c.<span class="property">o</span> !== <span class="number">0x4f464</span>) <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">const</span> m = <span class="title class_">Process</span>.<span class="title function_">findModuleByName</span>(<span class="variable constant_">TARGET_MODULE</span>);</span><br><span class="line">        <span class="keyword">if</span> (!m || !args[<span class="number">2</span>].<span class="title function_">equals</span>(m.<span class="property">base</span>.<span class="title function_">add</span>(<span class="number">0x4f1b0</span>))) <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">if</span> (!mod) mod = m;</span><br><span class="line">        <span class="keyword">if</span> (mod) &#123; <span class="variable constant_">HOOK_TARGETS</span>.<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">o</span>) &#123; <span class="title function_">hookOne</span>(o); &#125;); <span class="title function_">hookOne</span>(<span class="title class_">DDF94</span>_OFFSET); <span class="variable constant_">PATCH_TARGETS</span>.<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">o</span>) &#123; <span class="title function_">patchOne</span>(o); &#125;); <span class="title function_">patchCallers</span>(); &#125;</span><br><span class="line">        <span class="title function_">keepClean</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;); &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="title class_">Process</span>.<span class="property">arch</span> !== <span class="string">&quot;arm64&quot;</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&quot;arm64&quot;</span>);</span><br><span class="line"><span class="title function_">hookRaw</span>(); <span class="title function_">hookPth</span>();</span><br><span class="line"><span class="title function_">ev</span>(<span class="string">&quot;A&quot;</span>, &#123; <span class="attr">pid</span>: <span class="title class_">Process</span>.<span class="property">id</span> &#125;);</span><br><span class="line"><span class="title function_">setImmediate</span>(<span class="keyword">function</span> (<span class="params"></span>) &#123; <span class="title function_">ev</span>(<span class="string">&quot;R&quot;</span>, &#123; <span class="attr">pid</span>: <span class="title class_">Process</span>.<span class="property">id</span> &#125;); &#125;);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/./%E7%88%B1%E5%8A%A0%E5%AF%86Frida.assets/image-20260825124955694-1787633399577-2-1787633402127-4-1787633404310-6.png" alt="image-20260825124955694"></p>
+<p>之后无论是动态拿DEX或者进行其他的 hook 操作就方便多了</p>
+<h2 id="静态提取DEX"><a href="#静态提取DEX" class="headerlink" title="静态提取DEX"></a>静态提取DEX</h2><p>对于这类加固而言，磁盘占用大且信息熵高的文件就很有可能是被加密的DEX文件</p>
+<p>在示例中，这类文件如下</p>
+<ul>
+<li>assets&#x2F;ijiami.dat</li>
+<li>assets&#x2F;ijiami.ajm</li>
+</ul>
+<p>然后让 AI 辅助沿字符串和 xref 追踪，可以逐步定位 DEX 解密逻辑，对于现在的大模型能力来说不是什么难事</p>
+<p><img src="/./%E7%88%B1%E5%8A%A0%E5%AF%86Frida.assets/image-20260825125825545-1787633907834-8.png" alt="image-20260825125825545"></p>
+<p>对于那种密钥常量之类的，如果限定了大小，场景合适，可以尝试暴力穷举，用文件魔数什么的进行约束</p>
+<p>最终静态分析结论：</p>
+<p>本样本里， ijiami.dat 负责恢复 8 个结构合法但仍处于方法抽空状态的 DEX；ijiami.ajm 则保存 142,672 条方法正文记录，可按 marker 原位回填这些 DEX 中被默认返回&#x2F;NOP 骨架替换的方法体</p>
+<p>这里容易踩坑： ijiami.dat  解出的 DEX 虽然能过  <code>dexdump</code> 结构校验，但并不代表方法正文已经完整恢复。建议额外扫描 <code>debug_info_off</code> 异常 marker、默认返回&#x2F;NOP 骨架，以及业务类中是否大量保留 try 块但首条即 return</p>
+<p>不主动提，大模型很容易停在 能打开DEX 的阶段</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p>[<a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-292208.htm">原创]某加固最新版frida检测绕过-trace一把嗦(续)-Android安全-看雪安全社区｜专业技术交流与安全研究论坛</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.52pojie.cn/thread-2093062-1-1.html">某密企业版加固反调试与VMP分析 - 吾爱破解 - 52pojie.cn</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/autorun886">autorun</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://www.autorun.top/post/ijiami-frida-bypass.html">http://www.autorun.top/post/ijiami-frida-bypass.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://www.autorun.top" target="_blank">autorun's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Android/">Android</a><a class="post-meta__tags" href="/tags/%E5%8A%A0%E5%9B%BA/">加固</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar-card.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/post/libdexhelper-static-analysis.html" title="libDexHelper.so 静态分析"><div class="cover" style="background: #242830"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">libDexHelper.so 静态分析</div></div><div class="info-2"><div class="info-item-1">libDexHelper.so 的初始化流程、手动 loader 与 ELF relocation 静态分析。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/post/libdexhelper-static-analysis.html" title="libDexHelper.so 静态分析"><div class="cover" style="background: #242830"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-25</div><div class="info-item-2">libDexHelper.so 静态分析</div></div><div class="info-2"><div class="info-item-1">libDexHelper.so 的初始化流程、手动 loader 与 ELF relocation 静态分析。</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar-card.jpg" width="104" height="104" decoding="async" onerror="this.onerror=null;this.src='http://cdn.autorun.top/img/friend_404.gif'" alt="autorun 头像"/></div><div class="author-info-name">autorun</div><div class="author-info-description">逆向、安全、AI 与爬虫笔记</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/autorun886"><i class="fab fa-github"></i><span>查看 GitHub</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/autorun886" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:sunyiping1208@outlook.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="/atom.xml" target="_blank" title="RSS"><i class="fas fa-rss" style="color: #FFA500;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">最近更新：逆向分析、安全实验、AI 工程与爬虫实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9F%90%E5%8A%A0%E5%AF%86%E4%BC%81%E4%B8%9A%E7%89%88-Frida-%E6%A3%80%E6%B5%8B%E7%BB%95%E8%BF%87"><span class="toc-text">某加密企业版 Frida 检测绕过</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E5%85%88%E5%87%86%E5%A4%87"><span class="toc-text">事先准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Frida-%E4%B8%80%E6%8A%8A%E6%A2%AD"><span class="toc-text">Frida 一把梭</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%AE%E5%A4%8D-libexec-so"><span class="toc-text">修复 libexec.so</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#trace"><span class="toc-text">trace</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E7%BB%88%E5%AE%9A%E5%88%B6%E5%8C%96%E8%84%9A%E6%9C%AC"><span class="toc-text">最终定制化脚本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E6%8F%90%E5%8F%96DEX"><span class="toc-text">静态提取DEX</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="toc-text">参考文章</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/post/libdexhelper-static-analysis.html" title="libDexHelper.so 静态分析"><div style="background: #242830"></div></a><div class="content"><a class="title" href="/post/libdexhelper-static-analysis.html" title="libDexHelper.so 静态分析">libDexHelper.so 静态分析</a><time datetime="2026-08-25T06:00:00.000Z" title="发表于 2026-08-25 14:00:00">2026-08-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/post/ijiami-frida-bypass.html" title="某加密企业版 Frida 检测绕过"><div style="background: #5a4548"></div></a><div class="content"><a class="title" href="/post/ijiami-frida-bypass.html" title="某加密企业版 Frida 检测绕过">某加密企业版 Frida 检测绕过</a><time datetime="2026-08-25T05:00:00.000Z" title="发表于 2026-08-25 13:00:00">2026-08-25</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025&ndash;2026 autorun</span></div><div class="footer_custom_text"><a href="https://beian.mps.gov.cn/#/query/webSearch?code=43010402002669" rel="noreferrer" target="_blank"><img src="http://cdn.autorun.top/img/备案图标.png" alt="公安备案图标" style="height:1em;vertical-align:middle;margin-right:4px;"/>湘公网安备43010402002669号</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.9/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || item.innerHTML || ""
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    if (e.request.status === 404) {
+      false
+        ? pjax.loadUrl('/404.html')
+        : window.location.href = e.request.responseURL
+    }
+  })
+})</script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.4"></script></div></div></body></html>

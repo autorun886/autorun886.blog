@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1120" viewBox="0 0 1320 1120">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#94a3b8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .bg{fill:#f8fafc}
+    .title{font:700 28px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#0f172a}
+    .box{fill:#ffffff;stroke:#475569;stroke-width:1.4;rx:8;filter:url(#shadow)}
+    .decision{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5;filter:url(#shadow)}
+    .term{fill:#fee2e2;stroke:#991b1b;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .ok{fill:#ecfdf5;stroke:#047857;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .nodeText{font:500 16px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#111827}
+    .edge{stroke:#334155;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+    .edgeText{font:600 14px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#334155}
+  </style>
+<rect class="bg" x="0" y="0" width="1320" height="1120"/>
+<text class="title" x="660" y="44" text-anchor="middle">sub_4A78 初始化与 maps/RWX 检测流程</text>
+<path class="edge" d="M660,154 L660,186"/>
+
+<path class="edge" d="M660,258 L660,290"/>
+
+<path class="edge" d="M660,362 L660,394"/>
+
+<path class="edge" d="M660,466 L660,498"/>
+
+<path class="edge" d="M660,570 L660,602"/>
+
+<path class="edge" d="M514,648 L400,654"/>
+<text class="edgeText" x="457" y="645" text-anchor="middle">否</text>
+<path class="edge" d="M806,648 L900,654"/>
+<text class="edgeText" x="853" y="645" text-anchor="middle">是</text>
+<path class="edge" d="M1050,690 L1050,734"/>
+
+<path class="edge" d="M914,780 L400,1032"/>
+<text class="edgeText" x="657" y="900" text-anchor="middle">否</text>
+<path class="edge" d="M1050,826 L1050,864"/>
+<text class="edgeText" x="1050" y="839" text-anchor="middle">是</text>
+<path class="edge" d="M1050,936 L1050,980"/>
+
+<path class="edge" d="M1050,980 L1050,690"/>
+<text class="edgeText" x="1050" y="829" text-anchor="middle">否</text>
+<path class="edge" d="M914,1026 L800,1032"/>
+<text class="edgeText" x="857" y="1023" text-anchor="middle">是</text>
+<rect class="box" x="500" y="82" width="320" height="72"/>
+<text class="nodeText" x="660" y="112" text-anchor="middle">sub_4A78@0x4d1c</text>
+<text class="nodeText" x="660" y="134" text-anchor="middle">init_proc 入口</text>
+<rect class="box" x="500" y="186" width="320" height="72"/>
+<text class="nodeText" x="660" y="216" text-anchor="middle">扫描自身 ELF base</text>
+<text class="nodeText" x="660" y="238" text-anchor="middle">保存 n70/qword_16050</text>
+<rect class="box" x="500" y="290" width="320" height="72"/>
+<text class="nodeText" x="660" y="320" text-anchor="middle">dlopen libc.so</text>
+<text class="nodeText" x="660" y="342" text-anchor="middle">dlsym sscanf</text>
+<rect class="box" x="500" y="394" width="320" height="72"/>
+<text class="nodeText" x="660" y="424" text-anchor="middle">递归调用 sub_4A78@0x4a78</text>
+<text class="nodeText" x="660" y="446" text-anchor="middle">检测模式</text>
+<rect class="box" x="500" y="498" width="320" height="72"/>
+<text class="nodeText" x="660" y="539" text-anchor="middle">fopen('/proc/self/maps','r')</text>
+<polygon class="decision" points="660,602 806,648 660,694 514,648"/>
+<text class="nodeText" x="660" y="642" text-anchor="middle">fopen</text>
+<text class="nodeText" x="660" y="664" text-anchor="middle">成功?</text>
+<rect class="ok" x="120" y="618" width="280" height="72"/>
+<text class="nodeText" x="260" y="659" text-anchor="middle">返回 0</text>
+<rect class="box" x="900" y="618" width="300" height="72"/>
+<text class="nodeText" x="1050" y="648" text-anchor="middle">初始化 line buffer</text>
+<text class="nodeText" x="1050" y="670" text-anchor="middle">fgets 读 maps 行</text>
+<polygon class="decision" points="1050,734 1186,780 1050,826 914,780"/>
+<text class="nodeText" x="1050" y="785" text-anchor="middle">读到一行?</text>
+<rect class="box" x="900" y="864" width="300" height="72"/>
+<text class="nodeText" x="1050" y="894" text-anchor="middle">匹配路径</text>
+<text class="nodeText" x="1050" y="916" text-anchor="middle">libc/libdl/linker</text>
+<polygon class="decision" points="1050,980 1186,1026 1050,1072 914,1026"/>
+<text class="nodeText" x="1050" y="1020" text-anchor="middle">rwx 且</text>
+<text class="nodeText" x="1050" y="1042" text-anchor="middle">size &lt;= 0x4000?</text>
+<rect class="term" x="520" y="996" width="280" height="72"/>
+<text class="nodeText" x="660" y="1026" text-anchor="middle">fclose</text>
+<text class="nodeText" x="660" y="1048" text-anchor="middle">返回 1</text>
+<rect class="ok" x="120" y="996" width="280" height="72"/>
+<text class="nodeText" x="260" y="1026" text-anchor="middle">fclose</text>
+<text class="nodeText" x="260" y="1048" text-anchor="middle">返回 0</text>
+</svg>

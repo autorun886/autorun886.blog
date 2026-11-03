@@ -1,0 +1,14 @@
+flowchart TD
+    A["sub_36E0\n进入 dynamic section 阶段"] --> B["定位 PT_DYNAMIC\n取得 Dyn 条目数组"]
+    B --> C{"还有 Dyn 条目?\nd_tag != DT_NULL"}
+    C -- "否" --> Z["解析完成\n进入后续装载阶段"]
+    C -- "是" --> D["读取 d_tag / d_val\n进入 0x4518 jump table"]
+    D --> E["基础表\nDT_STRTAB / DT_SYMTAB / DT_HASH"]
+    D --> F["重定位表\nDT_RELA / DT_RELASZ\nDT_JMPREL / PLTRELSZ"]
+    D --> G["生命周期入口\nDT_INIT / INIT_ARRAY\nDT_FINI / FINI_ARRAY"]
+    D --> H["依赖项\nDT_NEEDED -> 字符串表偏移"]
+    E --> I["保存到 loader 状态\n供 dlopen / relocation / JNI 查找使用"]
+    F --> I
+    G --> I
+    H --> I
+    I --> C

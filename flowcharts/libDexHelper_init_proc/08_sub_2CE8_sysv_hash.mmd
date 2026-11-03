@@ -1,0 +1,8 @@
+flowchart TD
+    A["sub_2CE8 入口\n输入 symbol name"] --> B["h = 0"]
+    B --> C{"当前字符\n是否为 0?"}
+    C -- "是" --> Z["返回 h\n用于 bucket/chain 查符号"]
+    C -- "否" --> D["h = ch + 16 * h"]
+    D --> E["g = h & 0xf0000000"]
+    E --> F["h = (g ^ h) ^ (g >> 24)\n指针推进到下一字符"]
+    F --> C

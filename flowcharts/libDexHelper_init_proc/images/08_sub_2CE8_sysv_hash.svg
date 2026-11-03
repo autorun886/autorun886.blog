@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="980" viewBox="0 0 980 980">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#94a3b8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .bg{fill:#f8fafc}
+    .title{font:700 28px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#0f172a}
+    .box{fill:#ffffff;stroke:#475569;stroke-width:1.4;rx:8;filter:url(#shadow)}
+    .decision{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5;filter:url(#shadow)}
+    .term{fill:#fee2e2;stroke:#991b1b;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .ok{fill:#ecfdf5;stroke:#047857;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .nodeText{font:500 16px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#111827}
+    .edge{stroke:#334155;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+    .edgeText{font:600 14px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#334155}
+  </style>
+<rect class="bg" x="0" y="0" width="980" height="980"/>
+<text class="title" x="490" y="44" text-anchor="middle">sub_2CE8 ELF SysV hash 算法流程</text>
+<path class="edge" d="M490,154 L490,186"/>
+
+<path class="edge" d="M490,258 L490,300"/>
+
+<path class="edge" d="M490,392 L490,820"/>
+<text class="edgeText" x="490" y="600" text-anchor="middle">是</text>
+<path class="edge" d="M490,392 L490,430"/>
+<text class="edgeText" x="490" y="405" text-anchor="middle">否</text>
+<path class="edge" d="M490,502 L490,540"/>
+
+<path class="edge" d="M490,612 L490,650"/>
+
+<path class="edge" d="M490,650 L490,392"/>
+
+<rect class="box" x="330" y="82" width="320" height="72"/>
+<text class="nodeText" x="490" y="112" text-anchor="middle">sub_2CE8 入口</text>
+<text class="nodeText" x="490" y="134" text-anchor="middle">输入 symbol name</text>
+<rect class="box" x="330" y="186" width="320" height="72"/>
+<text class="nodeText" x="490" y="227" text-anchor="middle">h = 0</text>
+<polygon class="decision" points="490,300 636,346 490,392 344,346"/>
+<text class="nodeText" x="490" y="340" text-anchor="middle">当前字符</text>
+<text class="nodeText" x="490" y="362" text-anchor="middle">是否为 0?</text>
+<rect class="ok" x="330" y="820" width="320" height="72"/>
+<text class="nodeText" x="490" y="850" text-anchor="middle">返回 h</text>
+<text class="nodeText" x="490" y="872" text-anchor="middle">用于 bucket/chain 查符号</text>
+<rect class="box" x="330" y="430" width="320" height="72"/>
+<text class="nodeText" x="490" y="471" text-anchor="middle">h = ch + 16 * h</text>
+<rect class="box" x="330" y="540" width="320" height="72"/>
+<text class="nodeText" x="490" y="581" text-anchor="middle">g = h &amp; 0xf0000000</text>
+<rect class="box" x="330" y="650" width="320" height="72"/>
+<text class="nodeText" x="490" y="680" text-anchor="middle">h = (g ^ h) ^ (g &gt;&gt; 24)</text>
+<text class="nodeText" x="490" y="702" text-anchor="middle">指针推进到下一字符</text>
+</svg>

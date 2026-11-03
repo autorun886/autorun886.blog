@@ -1,0 +1,8 @@
+flowchart TD
+    A["调用点\nBL sub_2B30 等短跳板"] --> B["短跳板\nADRP / LDR / ADD / BR X17"]
+    B --> C["读取对应 GOT 槽\npsub_2A30_x"]
+    C --> D["首次调用: GOT 指向 PLT0\n后续调用: GOT 指向真实 API"]
+    D -- "lazy bind" --> E["sub_2A30 PLT0 resolver\n进入 linker 解析"]
+    D -- "bound" --> F["真实 libc/libdl API\nfopen / dlsym / mmap / ..."]
+    E --> F
+    F --> G["调用返回调用点\n完成 API 语义"]

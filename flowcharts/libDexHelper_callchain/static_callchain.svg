@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1840" viewBox="0 0 1500 1840">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#94a3b8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .bg{fill:#f8fafc}
+    .title{font:700 30px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#0f172a}
+    .box{fill:#ffffff;stroke:#475569;stroke-width:1.4;rx:8;filter:url(#shadow)}
+    .decision{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5;filter:url(#shadow)}
+    .term{fill:#fee2e2;stroke:#991b1b;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .ok{fill:#ecfdf5;stroke:#047857;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .nodeText{font:500 16px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#111827}
+    .edge{stroke:#334155;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+    .edgeText{font:600 14px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#334155}
+  </style>
+<rect class="bg" x="0" y="0" width="1500" height="1840"/>
+<text class="title" x="750" y="44" text-anchor="middle">libDexHelper.so 静态整体函数调用链路图</text>
+<path class="edge" d="M750,150 L750,180"/>
+
+<path class="edge" d="M750,250 L750,280"/>
+
+<path class="edge" d="M750,350 L750,380"/>
+
+<path class="edge" d="M750,450 L750,480"/>
+
+<path class="edge" d="M750,550 L750,580"/>
+
+<path class="edge" d="M750,650 L750,680"/>
+
+<path class="edge" d="M750,750 L750,790"/>
+
+<path class="edge" d="M886,836 L1060,825"/>
+<text class="edgeText" x="973" y="824.5" text-anchor="middle">yes</text>
+<path class="edge" d="M1210,860 L1210,900"/>
+
+<path class="edge" d="M750,882 L750,920"/>
+<text class="edgeText" x="750" y="895" text-anchor="middle">no</text>
+<path class="edge" d="M750,990 L750,1020"/>
+
+<path class="edge" d="M750,1090 L750,1120"/>
+
+<path class="edge" d="M750,1190 L750,1220"/>
+
+<path class="edge" d="M750,1290 L750,1320"/>
+
+<path class="edge" d="M750,1390 L750,1420"/>
+
+<path class="edge" d="M750,1490 L750,1520"/>
+
+<path class="edge" d="M750,1590 L750,1620"/>
+
+<path class="edge" d="M750,1690 L750,1720"/>
+
+<rect class="box" x="590" y="80" width="320" height="70"/>
+<text class="nodeText" x="750" y="109.5" text-anchor="middle">Android linker</text>
+<text class="nodeText" x="750" y="130.5" text-anchor="middle">loads libDexHelper.so</text>
+<rect class="box" x="590" y="180" width="320" height="70"/>
+<text class="nodeText" x="750" y="209.5" text-anchor="middle">INIT_ARRAY entry</text>
+<text class="nodeText" x="750" y="230.5" text-anchor="middle">0x4d1c inside sub_4A78</text>
+<rect class="box" x="590" y="280" width="320" height="70"/>
+<text class="nodeText" x="750" y="309.5" text-anchor="middle">sub_4A78 stage-0 init</text>
+<text class="nodeText" x="750" y="330.5" text-anchor="middle">resolve self base / qword_16050</text>
+<rect class="box" x="590" y="380" width="320" height="70"/>
+<text class="nodeText" x="750" y="409.5" text-anchor="middle">dlopen('libc.so', 2)</text>
+<text class="nodeText" x="750" y="430.5" text-anchor="middle">dlsym('sscanf')</text>
+<rect class="box" x="590" y="480" width="320" height="70"/>
+<text class="nodeText" x="750" y="509.5" text-anchor="middle">recursive detector call</text>
+<text class="nodeText" x="750" y="530.5" text-anchor="middle">sub_4A78@0x4a78</text>
+<rect class="box" x="590" y="580" width="320" height="70"/>
+<text class="nodeText" x="750" y="609.5" text-anchor="middle">fopen('/proc/self/maps')</text>
+<text class="nodeText" x="750" y="630.5" text-anchor="middle">fgets loop</text>
+<rect class="box" x="590" y="680" width="320" height="70"/>
+<text class="nodeText" x="750" y="709.5" text-anchor="middle">match libc/libdl/linker</text>
+<text class="nodeText" x="750" y="730.5" text-anchor="middle">sscanf permissions</text>
+<polygon class="decision" points="750,790 886,836 750,882 614,836"/>
+<text class="nodeText" x="750" y="830.5" text-anchor="middle">rwx &amp;&amp;</text>
+<text class="nodeText" x="750" y="851.5" text-anchor="middle">size &lt;= 0x4000?</text>
+<rect class="box" x="1060" y="790" width="300" height="70"/>
+<text class="nodeText" x="1210" y="819.5" text-anchor="middle">nonzero result</text>
+<text class="nodeText" x="1210" y="840.5" text-anchor="middle">cbnz -&gt; 0x4f38</text>
+<rect class="term" x="1060" y="900" width="300" height="70"/>
+<text class="nodeText" x="1210" y="919" text-anchor="middle">getpid</text>
+<text class="nodeText" x="1210" y="940" text-anchor="middle">kill SIGKILL</text>
+<text class="nodeText" x="1210" y="961" text-anchor="middle">_Exit</text>
+<rect class="box" x="590" y="920" width="320" height="70"/>
+<text class="nodeText" x="750" y="949.5" text-anchor="middle">zero result</text>
+<text class="nodeText" x="750" y="970.5" text-anchor="middle">copy dword_16010..16028</text>
+<rect class="box" x="590" y="1020" width="320" height="70"/>
+<text class="nodeText" x="750" y="1049.5" text-anchor="middle">sub_36E0</text>
+<text class="nodeText" x="750" y="1070.5" text-anchor="middle">manual loader</text>
+<rect class="box" x="590" y="1120" width="320" height="70"/>
+<text class="nodeText" x="750" y="1149.5" text-anchor="middle">find self mapping</text>
+<text class="nodeText" x="750" y="1170.5" text-anchor="middle">read metadata</text>
+<rect class="box" x="590" y="1220" width="320" height="70"/>
+<text class="nodeText" x="750" y="1249.5" text-anchor="middle">save dword_16088</text>
+<text class="nodeText" x="750" y="1270.5" text-anchor="middle">XOR key</text>
+<rect class="box" x="590" y="1320" width="320" height="70"/>
+<text class="nodeText" x="750" y="1349.5" text-anchor="middle">mmap header</text>
+<text class="nodeText" x="750" y="1370.5" text-anchor="middle">sub_2C0C decode #1</text>
+<rect class="box" x="590" y="1420" width="320" height="70"/>
+<text class="nodeText" x="750" y="1449.5" text-anchor="middle">parse ELF/program headers</text>
+<text class="nodeText" x="750" y="1470.5" text-anchor="middle">mmap full image</text>
+<rect class="box" x="590" y="1520" width="320" height="70"/>
+<text class="nodeText" x="750" y="1549.5" text-anchor="middle">sub_2C0C decode #2/#3</text>
+<text class="nodeText" x="750" y="1570.5" text-anchor="middle">parse dynamic section</text>
+<rect class="box" x="590" y="1620" width="320" height="70"/>
+<text class="nodeText" x="750" y="1649.5" text-anchor="middle">sub_2DC0 relocation</text>
+<text class="nodeText" x="750" y="1670.5" text-anchor="middle">pass #1 count=0x6a3</text>
+<rect class="ok" x="590" y="1720" width="320" height="70"/>
+<text class="nodeText" x="750" y="1749.5" text-anchor="middle">sub_2DC0 pass #2</text>
+<text class="nodeText" x="750" y="1770.5" text-anchor="middle">JNI_OnLoad hash / init</text>
+</svg>

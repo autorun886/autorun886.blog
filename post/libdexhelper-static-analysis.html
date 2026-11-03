@@ -1,0 +1,1037 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>libDexHelper.so 静态分析 | autorun's blog</title><meta name="author" content="autorun"><meta name="copyright" content="autorun"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="libDexHelper.so 的初始化流程、手动 loader 与 ELF relocation 静态分析。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="libDexHelper.so 静态分析">
+<meta property="og:url" content="http://www.autorun.top/post/libdexhelper-static-analysis.html">
+<meta property="og:site_name" content="autorun&#39;s blog">
+<meta property="og:description" content="libDexHelper.so 的初始化流程、手动 loader 与 ELF relocation 静态分析。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.autorun.top/img/avatar-card.jpg">
+<meta property="article:published_time" content="2026-08-25T06:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-03T02:57:17.809Z">
+<meta property="article:author" content="autorun">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="加固">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.autorun.top/img/avatar-card.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "libDexHelper.so 静态分析",
+  "url": "http://www.autorun.top/post/libdexhelper-static-analysis.html",
+  "image": "http://www.autorun.top/img/avatar-card.jpg",
+  "datePublished": "2026-08-25T06:00:00.000Z",
+  "dateModified": "2026-11-03T02:57:17.809Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "autorun",
+      "url": "https://github.com/autorun886"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/avatar.jpg"><link rel="canonical" href="http://www.autorun.top/post/libdexhelper-static-analysis.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//static.cloudflareinsights.com"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.9/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const hour = new Date().getHours()
+          const isNight = hour <= 6 || hour >= 22
+          if (theme === undefined) isNight ? activateDarkMode() : activateLightMode()
+          else theme === 'light' ? activateLightMode() : activateDarkMode()
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script defer="defer" data-pjax="data-pjax" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;: &quot;cfut_BIyZCEeKlXiqv6Yn95tSJ9gVbPdGZnfM55arCPak0f9ad7e0&quot;}"></script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":7,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":400,"highlightFullpage":true,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#6C5CE7","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'libDexHelper.so 静态分析',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/custom.css?v=20260802-research-console"><meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="autorun's blog" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar-card.jpg" onerror="this.onerror=null;this.src='http://cdn.autorun.top/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">autorun's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">libDexHelper.so 静态分析</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">libDexHelper.so 静态分析</h1><p class="post-description">libDexHelper.so 的初始化流程、手动 loader 与 ELF relocation 静态分析。</p><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-25T06:00:00.000Z" title="发表于 2026-08-25 14:00:00">2026-08-25</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-03T02:57:17.809Z" title="更新于 2026-11-03 10:57:17">2026-11-03</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AE%89%E5%8D%93%E9%80%86%E5%90%91/">安卓逆向</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">5.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>21分钟</span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="libDexHelper-so-静态分析"><a href="#libDexHelper-so-静态分析" class="headerlink" title="libDexHelper.so 静态分析"></a>libDexHelper.so 静态分析</h1><p><strong>声明：</strong></p>
+<ol>
+<li>本文仅用于 Android native 加固样本的静态技术研究与学习交流。</li>
+<li>本文聚焦 <strong>libDexHelper.so</strong> 的结构、初始化流程、导入跳板、手动 loader 和 relocation 逻辑。</li>
+<li>本文只讨论静态结构和函数职责。</li>
+</ol>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><strong>libDexHelper.so</strong> 是一个典型加固壳早期 native 组件。它不是普通 JNI 业务库，而是承担初始化门卫、隐藏代码装载、ELF 重定位、<strong>JNI_OnLoad</strong> 调度和析构生命周期管理等职责。</p>
+<p>这篇文档按“先看图，再逐函数”的顺序组织:</p>
+<ol>
+<li>先用总图建立完整执行路径。</li>
+<li>先确认 7 个真实逻辑函数，再把 28 个导入跳板作为支撑层阅读。</li>
+<li>再按子流程图拆解关键阶段，完整地址索引放在最后附录。</li>
+</ol>
+<p>文中的流程图均以内嵌 Mermaid 保存，图形关系直接存在于 Markdown 正文中，便于发布平台渲染，也便于后续由 AI 或人工继续校订。</p>
+<p>建议阅读路线:</p>
+<ol>
+<li>先读第 1 章，只抓主干: <strong>sub_4A78 -&gt; sub_36E0 -&gt; sub_2DC0 -&gt; JNI_OnLoad</strong>。</li>
+<li>再读第 2 章，把函数按生命周期、门卫链、主 loader、解码、relocation、辅助函数分组。</li>
+<li>需要细节时读第 3-8 章；只关心检测面时直接跳到第 10 章。</li>
+<li>需要查地址时再看第 11 章附录，不在开头消耗阅读注意力。</li>
+</ol>
+<h2 id="1-总图先行"><a href="#1-总图先行" class="headerlink" title="1. 总图先行"></a>1. 总图先行</h2><p>第 1 章只保留两张入口图：一张静态整体调用链，一张 init_proc 总流程。其余子流程图放回对应函数章节，避免开头连续堆图。</p>
+<h3 id="1-1-静态整体调用链"><a href="#1-1-静态整体调用链" class="headerlink" title="1.1 静态整体调用链"></a>1.1 静态整体调用链</h3><p>先只看 5 行主链路:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">.init_array[0] -&gt; sub_4A78@0x4d1c</span><br><span class="line">  -&gt; maps 检测</span><br><span class="line">  -&gt; sub_36E0 主 loader</span><br><span class="line">  -&gt; sub_2DC0 relocation</span><br><span class="line">  -&gt; JNI_OnLoad / fini bridge</span><br></pre></td></tr></table></figure>
+
+<p>图上真正需要优先记住的是 7 个逻辑函数:</p>
+<table>
+<thead>
+<tr>
+<th>地址</th>
+<th>IDA 名称</th>
+<th>先读作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0x4a78</code></td>
+<td><strong>sub_4A78</strong></td>
+<td>init 门卫、maps 检测、失败终止、进入 loader</td>
+</tr>
+<tr>
+<td><code>0x36e0</code></td>
+<td><strong>sub_36E0</strong></td>
+<td>手动 loader 主体</td>
+</tr>
+<tr>
+<td><code>0x2dc0</code></td>
+<td><strong>sub_2DC0</strong></td>
+<td>relocation 处理器</td>
+</tr>
+<tr>
+<td><code>0x2c0c</code></td>
+<td><strong>sub_2C0C</strong></td>
+<td>XOR 解码 helper</td>
+</tr>
+<tr>
+<td><code>0x2ce8</code></td>
+<td><strong>sub_2CE8</strong></td>
+<td>ELF SysV hash helper</td>
+</tr>
+<tr>
+<td><code>0x2c00</code></td>
+<td>IDA 命名 <strong>start</strong></td>
+<td>实际是 fini bridge，不是 ELF entry</td>
+</tr>
+<tr>
+<td><code>0x4f84</code></td>
+<td><strong>sub_4F84</strong></td>
+<td><strong>__cxa_atexit</strong> 注册桥</td>
+</tr>
+</tbody></table>
+<p>28 个 <code>0x2a30..0x2bf0</code> 短函数先按 <strong>导入跳板层</strong> 整体理解，完整地址表见第 11 章附录。</p>
+<p><img src="/flowcharts/libDexHelper_callchain/static_callchain.png" alt="libDexHelper 静态整体函数调用链路图"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: 先看 <strong>sub_4A78 -&gt; sub_36E0 -&gt; sub_2DC0 -&gt; JNI_OnLoad</strong> 这条主链。</li>
+<li>关键判断: 28 个短导入跳板是支撑层，不是逐个展开的主阅读对象。</li>
+<li>细读位置: 生命周期见第 3 章，门卫链见第 4 章，主 loader 见第 5 章，relocation 见第 6 章。</li>
+</ul>
+<h3 id="1-2-init-proc-总流程"><a href="#1-2-init-proc-总流程" class="headerlink" title="1.2 init_proc 总流程"></a>1.2 init_proc 总流程</h3><p><img src="/flowcharts/libDexHelper_init_proc/images/01_overall_init_proc.png" alt="libDexHelper init_proc 总流程"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: 从 <strong>.init_array[0]</strong> 到 <strong>sub_36E0</strong> 的初始化主路径。</li>
+<li>关键判断: <strong>sub_4A78</strong> 的 maps 检测决定进入失败链还是进入主 loader。</li>
+<li>细读位置: <strong>sub_4A78</strong> 见第 4 章，<strong>sub_36E0</strong> 见第 5 章，fini bridge 见第 3 章。</li>
+</ul>
+<p>主流程可以压缩为:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Android linker</span><br><span class="line">  -&gt; .init_array[0]</span><br><span class="line">    -&gt; sub_4A78@0x4d1c</span><br><span class="line">      -&gt; 找自身 ELF base</span><br><span class="line">      -&gt; dlopen(&quot;libc.so&quot;)</span><br><span class="line">      -&gt; dlsym(&quot;sscanf&quot;)</span><br><span class="line">      -&gt; 递归进入 sub_4A78@0x4a78</span><br><span class="line">        -&gt; fopen(&quot;/proc/self/maps&quot;)</span><br><span class="line">        -&gt; fgets maps 行</span><br><span class="line">        -&gt; 匹配 libc.so / libdl.so / linker</span><br><span class="line">        -&gt; sscanf 解析权限</span><br><span class="line">        -&gt; 命中小型 rwx 映射: kill/_Exit 分支</span><br><span class="line">        -&gt; 未命中: sub_36E0 主 loader</span><br><span class="line">          -&gt; 读取隐藏材料</span><br><span class="line">          -&gt; mmap 新镜像</span><br><span class="line">          -&gt; sub_2C0C XOR 解码</span><br><span class="line">          -&gt; 解析 ELF header / program header / dynamic section</span><br><span class="line">          -&gt; dlopen DT_NEEDED</span><br><span class="line">          -&gt; sub_2DC0 relocation</span><br><span class="line">          -&gt; sub_2CE8 + strcmp 查 JNI_OnLoad</span><br><span class="line">          -&gt; init/JNI_OnLoad/析构注册/资源关闭</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-从图到函数分组"><a href="#2-从图到函数分组" class="headerlink" title="2. 从图到函数分组"></a>2. 从图到函数分组</h2><p>第 1 章解决“函数在图中的位置”，本章解决“按什么顺序读函数”。后面的第 3-8 章会按这些分组展开，避免把 28 个短导入跳板和 7 个真实逻辑函数混在同一层级阅读。</p>
+<p>当前 IDA 函数边界共 35 个函数:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">0x2a30..0x2bf0  28 个导入跳板/PLT 封装</span><br><span class="line">0x2c00          IDA 命名 start，实际是 fini bridge</span><br><span class="line">0x2c0c          XOR 解码 helper</span><br><span class="line">0x2ce8          ELF SysV hash helper</span><br><span class="line">0x2dc0          relocation 处理器</span><br><span class="line">0x36e0          主 loader</span><br><span class="line">0x4a78          init 门卫 + maps 检测 + kill 分支</span><br><span class="line">0x4f84          atexit 注册桥</span><br></pre></td></tr></table></figure>
+
+<p>按职责可分为 6 组:</p>
+<table>
+<thead>
+<tr>
+<th>分组</th>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>生命周期</td>
+<td>IDA 命名 <strong>start</strong>、<strong>sub_4F84</strong>、<strong>sub_2AA0</strong>、<strong>sub_2B20</strong></td>
+<td>fini 触发、析构注册、DSO handle 管理</td>
+</tr>
+<tr>
+<td>门卫链</td>
+<td><strong>sub_4A78</strong>、<strong>sub_2B10</strong>、<strong>sub_2B30</strong>、<strong>sub_2B40</strong>、<strong>sub_2A80</strong>、<strong>sub_2B60</strong>、<strong>sub_2A70</strong>、<strong>sub_2A60</strong>、<strong>sub_2BB0</strong></td>
+<td>自定位、maps 扫描、失败终止</td>
+</tr>
+<tr>
+<td>主 loader</td>
+<td><strong>sub_36E0</strong>、<strong>sub_2BD0</strong>、<strong>sub_2B00</strong>、<strong>sub_2AB0</strong>、<strong>sub_2AC0</strong>、<strong>sub_2B50</strong>、<strong>sub_2BA0</strong>、<strong>sub_2BE0</strong>、<strong>sub_2A90</strong>、<strong>sub_2BF0</strong></td>
+<td>读取、映射、解码、设权限、回写、关闭资源</td>
+</tr>
+<tr>
+<td>解码</td>
+<td><strong>sub_2C0C</strong></td>
+<td>单字节 XOR 解码</td>
+</tr>
+<tr>
+<td>relocation</td>
+<td><strong>sub_2DC0</strong>、<strong>sub_2B30</strong>、<strong>sub_2A50</strong>、<strong>sub_2AF0</strong>、<strong>sub_2CE8</strong>、<strong>sub_2B80</strong>、<strong>sub_2AD0</strong></td>
+<td>符号解析、hash fallback、重定位写回、异常终止</td>
+</tr>
+<tr>
+<td>辅助</td>
+<td><strong>sub_2A30</strong>、<strong>sub_2B70</strong>、<strong>sub_2B90</strong>、<strong>sub_2BC0</strong>、<strong>sub_2AE0</strong></td>
+<td>PLT0、dump 辅助、字符串长度、栈保护失败</td>
+</tr>
+</tbody></table>
+<h2 id="3-生命周期函数"><a href="#3-生命周期函数" class="headerlink" title="3. 生命周期函数"></a>3. 生命周期函数</h2><p><img src="/flowcharts/libDexHelper_init_proc/images/06_fini_lifecycle.png" alt="fini 生命周期流程"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: 析构注册和 <strong>.fini_array</strong> 触发如何闭合。</li>
+<li>关键判断: IDA 命名 <strong>start</strong> 的 <code>0x2c00</code> 实际是 fini bridge，不是 ELF entry。</li>
+</ul>
+<h3 id="3-1-IDA-命名-start-0x2c00"><a href="#3-1-IDA-命名-start-0x2c00" class="headerlink" title="3.1 IDA 命名 start - 0x2c00"></a>3.1 IDA 命名 <strong>start</strong> - <code>0x2c00</code></h3><p>这里的 <strong>start</strong> 是 IDA 自动命名，不是 ELF entry，也不是程序启动入口。动态段中的 <strong>.fini_array[0]</strong> 指向 <code>0x2c00</code>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0x2c00  adrl x0, unk_16000</span><br><span class="line">0x2c08  b    sub_2AA0</span><br></pre></td></tr></table></figure>
+
+<p><strong>sub_2AA0</strong> 是 <strong>__cxa_finalize</strong> 导入跳板，因此这个函数的实际职责是 fini bridge: 把当前 DSO handle 传给析构收口函数。</p>
+<h3 id="3-2-sub-4F84-0x4f84"><a href="#3-2-sub-4F84-0x4f84" class="headerlink" title="3.2 sub_4F84 - 0x4f84"></a>3.2 <strong>sub_4F84</strong> - <code>0x4f84</code></h3><p><strong>sub_4F84</strong> 是析构注册桥:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0x4f84  mov  x1, x0</span><br><span class="line">0x4f88  adrp x2, unk_16000</span><br><span class="line">0x4f8c  adrp x0, loc_4F6C</span><br><span class="line">0x4f98  b    sub_2B20</span><br></pre></td></tr></table></figure>
+
+<p>它把 <code>loc_4F6C</code>、调用者传入对象、<code>unk_16000</code> 组织成 <strong>__cxa_atexit(func, arg, dso_handle)</strong> 形式。由此可见:</p>
+<ul>
+<li><strong>sub_4F84</strong> 是注册侧。</li>
+<li>IDA 命名 <strong>start -&gt; sub_2AA0</strong> 是触发侧。</li>
+<li><strong>sub_2B20</strong> 和 <strong>sub_2AA0</strong> 分别对应 <strong>__cxa_atexit</strong> 与 <strong>__cxa_finalize</strong>。</li>
+</ul>
+<h2 id="4-sub-4A78-门卫链"><a href="#4-sub-4A78-门卫链" class="headerlink" title="4. sub_4A78 门卫链"></a>4. <strong>sub_4A78</strong> 门卫链</h2><p><img src="/flowcharts/libDexHelper_init_proc/images/02_sub_4A78_detector.png" alt="sub_4A78 初始化与检测流程"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: <strong>sub_4A78</strong> 的两个入口状态，先初始化 <strong>sscanf</strong>，再进入 maps 检测。</li>
+<li>关键判断: 是否命中 <strong>libc.so&#x2F;libdl.so&#x2F;linker</strong> 的小型 <strong>rwx</strong> 映射。</li>
+</ul>
+<p>建议先读 <strong>4.1</strong> 和 <strong>4.2</strong> 建立正常入口与检测态，再读 <strong>4.3</strong> 失败分支，最后用 <strong>4.4</strong> 回到主 loader 入口。</p>
+<p><strong>sub_4A78</strong> 是 <strong>.init_array[0]</strong> 的实际入口承载函数。<strong>.init_array</strong> 重定位指向 <strong>sub_4A78</strong> 内部的 <code>0x4d1c</code>，而不是函数起始地址 <code>0x4a78</code>。</p>
+<p>它包含两个状态:</p>
+<ol>
+<li>初始化态: 从 <code>0x4d1c</code> 开始，负责自定位和 <strong>sscanf</strong> 解析器准备。</li>
+<li>检测态: 从 <code>0x4a78</code> 开始，负责扫描 <code>/proc/self/maps</code>。</li>
+</ol>
+<h3 id="4-1-初始化态"><a href="#4-1-初始化态" class="headerlink" title="4.1 初始化态"></a>4.1 初始化态</h3><p>初始化态的关键步骤:</p>
+<ol>
+<li>按页向前扫描 ELF magic <code>0x464c457f</code>，定位当前 so 的内存基址。</li>
+<li>将基址写入 <code>qword_16050/n70</code>。</li>
+<li>调用 <strong>sub_2B10 -&gt; dlopen(“libc.so”, 2)</strong>。</li>
+<li>调用 <strong>sub_2B30 -&gt; dlsym(handle, “sscanf”)</strong>。</li>
+<li>把 <strong>sscanf</strong> 函数指针保存到 <code>off_16040</code>。</li>
+<li>递归调用 <strong>sub_4A78@0x4a78</strong>，进入 maps 检测态。</li>
+</ol>
+<p>关键反汇编:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">0x4dd8  adrp x3, n70</span><br><span class="line">0x4ddc  adrp x0, &quot;libc.so&quot;</span><br><span class="line">0x4de0  mov  w1, #2</span><br><span class="line">0x4de8  str  x2, [x3,#n70]</span><br><span class="line">0x4dec  bl   sub_2B10        ; dlopen</span><br><span class="line">0x4df0  adrl x1, &quot;sscanf&quot;</span><br><span class="line">0x4df8  bl   sub_2B30        ; dlsym</span><br><span class="line">0x4e00  str  x0, [off_16040]</span><br><span class="line">0x4e04  bl   sub_4A78        ; enter detector state</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-检测态"><a href="#4-2-检测态" class="headerlink" title="4.2 检测态"></a>4.2 检测态</h3><p>检测态的核心逻辑:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">fp = fopen(<span class="string">&quot;/proc/self/maps&quot;</span>, <span class="string">&quot;r&quot;</span>);</span><br><span class="line"><span class="keyword">while</span> (fgets(line, <span class="number">1024</span>, fp)) &#123;</span><br><span class="line">    <span class="keyword">if</span> (line_path_contains(<span class="string">&quot;libc.so&quot;</span>) ||</span><br><span class="line">        line_path_contains(<span class="string">&quot;libdl.so&quot;</span>) ||</span><br><span class="line">        line_path_contains(<span class="string">&quot;linker&quot;</span>)) &#123;</span><br><span class="line">        <span class="built_in">sscanf</span>(line, <span class="string">&quot;%lx-%lx %c%c%c...&quot;</span>, &amp;start, &amp;end, &amp;r, &amp;w, &amp;x);</span><br><span class="line">        <span class="keyword">if</span> (r == <span class="string">&#x27;r&#x27;</span> &amp;&amp; w == <span class="string">&#x27;w&#x27;</span> &amp;&amp; x == <span class="string">&#x27;x&#x27;</span> &amp;&amp; end - start &lt;= <span class="number">0x4000</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">fclose(fp);</span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>对应导入跳板:</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>导入&#x2F;API</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>sub_2B40</strong></td>
+<td><strong>fopen</strong></td>
+<td>打开 <code>/proc/self/maps</code></td>
+</tr>
+<tr>
+<td><strong>sub_2A80</strong></td>
+<td><strong>fgets</strong></td>
+<td>逐行读取 maps</td>
+</tr>
+<tr>
+<td><code>off_16040</code></td>
+<td><strong>sscanf</strong></td>
+<td>解析映射起止地址和权限字符</td>
+</tr>
+<tr>
+<td><strong>sub_2B60</strong></td>
+<td><strong>fclose</strong></td>
+<td>关闭 maps 文件句柄</td>
+</tr>
+</tbody></table>
+<p>这段检测并不是按进程名判断，也不是单纯搜索某个字符串；它关注的是 <strong>libc.so&#x2F;libdl.so&#x2F;linker</strong> 相关映射中是否存在小型 <strong>rwx</strong> 区域，大小阈值为 <code>0x4000</code>。</p>
+<h3 id="4-3-失败分支"><a href="#4-3-失败分支" class="headerlink" title="4.3 失败分支"></a>4.3 失败分支</h3><p>检测返回值经以下指令进入分支:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0x4e04  bl    sub_4A78</span><br><span class="line">0x4e08  uxtb  w0, w0</span><br><span class="line">0x4e0c  cbnz  w0, loc_4F38</span><br></pre></td></tr></table></figure>
+
+<p>失败分支:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">0x4f38  bl    sub_2A70</span><br><span class="line">0x4f3c  sxtw  x0, w0</span><br><span class="line">0x4f40  mov   x1, #9</span><br><span class="line">0x4f44  mov   x8, #0x81</span><br><span class="line">0x4f48  svc   #0</span><br><span class="line">0x4f4c  cmn   x0, #1, lsl #12</span><br><span class="line">0x4f50  mov   x19, x0</span><br><span class="line">0x4f54  b.ls  loc_4F64</span><br><span class="line">0x4f58  bl    sub_2A60</span><br><span class="line">0x4f5c  neg   w19, w19</span><br><span class="line">0x4f60  str   w19, [x0]</span><br><span class="line">0x4f64  mov   w0, #3</span><br><span class="line">0x4f68  bl    sub_2BB0</span><br><span class="line">0x4f74  cbz   x0, loc_4F7C</span><br><span class="line">0x4f78  blr   x0</span><br><span class="line">0x4f7c  ret</span><br></pre></td></tr></table></figure>
+
+<p>语义:</p>
+<ul>
+<li><strong>sub_2A70</strong> 对应 <strong>getpid</strong>。</li>
+<li><code>x1 = 9</code> 是 <code>SIGKILL</code>。</li>
+<li><code>x8 = 0x81</code> 是 AArch64 Linux <code>kill</code> syscall 号。</li>
+<li><strong>sub_2A60</strong> 对应 errno 存储位置。</li>
+<li><strong>sub_2BB0</strong> 对应 <strong>_Exit</strong>，是 syscall 返回后的后备退出路径。</li>
+</ul>
+<h3 id="4-4-正常分支"><a href="#4-4-正常分支" class="headerlink" title="4.4 正常分支"></a>4.4 正常分支</h3><p>检测结果为 0 时，函数继续复制 <code>dword_16010..16028</code> 一组状态，并在 <code>0x4ee8</code> 调用 <strong>sub_36E0</strong>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x4ee8  bl    sub_36E0</span><br></pre></td></tr></table></figure>
+
+<p>因此 <strong>sub_4A78</strong> 的静态定位是:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">init array 入口</span><br><span class="line">  -&gt; 自定位</span><br><span class="line">  -&gt; 初始化 sscanf</span><br><span class="line">  -&gt; maps 小型 rwx 检测</span><br><span class="line">  -&gt; 失败: kill/_Exit</span><br><span class="line">  -&gt; 通过: sub_36E0 主 loader</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-sub-36E0-主-loader"><a href="#5-sub-36E0-主-loader" class="headerlink" title="5. sub_36E0 主 loader"></a>5. <strong>sub_36E0</strong> 主 loader</h2><p><img src="/flowcharts/libDexHelper_init_proc/images/03_sub_36E0_loader.png" alt="sub_36E0 主 loader 流程"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: <strong>sub_36E0</strong> 把隐藏材料恢复成可运行镜像的完整 loader 流程。</li>
+<li>关键判断: 这不是普通 JNI 入口，而是读取、映射、解码、重定位、查找 <strong>JNI_OnLoad</strong> 的装载器。</li>
+</ul>
+<p>先按阶段 A-G 读标题，确认 loader 的大方向；再进入每个阶段的代码范围、输入输出和下游函数。dynamic section 和 <strong>JNI_OnLoad</strong> 的细节图放在本章对应小节里。</p>
+<p><strong>sub_36E0</strong> 是 <strong>libDexHelper.so</strong> 的主体函数，大小 <code>0x1398</code>。它的职责不是普通 JNI 调用，而是从当前 so 的隐藏材料中恢复后续 ELF&#x2F;payload，并执行装载器工作。</p>
+<p>主线速读:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">定位自身映射</span><br><span class="line">  -&gt; 读取隐藏材料和 XOR key</span><br><span class="line">  -&gt; mmap 头部窗口并解码</span><br><span class="line">  -&gt; 遍历 program header，建立完整装载镜像</span><br><span class="line">  -&gt; 解析 dynamic section，收集表地址和依赖项</span><br><span class="line">  -&gt; 两轮 relocation</span><br><span class="line">  -&gt; 查找并调用 JNI_OnLoad，注册析构并收尾</span><br></pre></td></tr></table></figure>
+
+<p>本节后面的 A-G 阶段都按同一格式阅读: 先看代码范围，再看行为，最后看关联导入。这样可以把 <strong>sub_36E0</strong> 从一个大函数拆成 7 个连续装载动作。</p>
+<h3 id="5-1-阶段-A-定位自身映射"><a href="#5-1-阶段-A-定位自身映射" class="headerlink" title="5.1 阶段 A: 定位自身映射"></a>5.1 阶段 A: 定位自身映射</h3><p>代码范围:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x3844..0x3910</span><br></pre></td></tr></table></figure>
+
+<p>行为:</p>
+<ol>
+<li>打开 <code>/proc/self/maps</code>。</li>
+<li>使用 <strong>sscanf(“%lx-%lx %s %s %s %s %s”, …)</strong> 解析每行。</li>
+<li>查找包含 <code>qword_16050</code> 的映射范围。</li>
+<li>关闭 maps 文件。</li>
+</ol>
+<p>目的:</p>
+<ul>
+<li>得到当前 so 的真实加载边界。</li>
+<li>为后续按文件偏移或映射偏移读取隐藏数据建立基准。</li>
+</ul>
+<h3 id="5-2-阶段-B-读取元信息和-XOR-key"><a href="#5-2-阶段-B-读取元信息和-XOR-key" class="headerlink" title="5.2 阶段 B: 读取元信息和 XOR key"></a>5.2 阶段 B: 读取元信息和 XOR key</h3><p>代码范围:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x3914..0x39a8</span><br></pre></td></tr></table></figure>
+
+<p>行为:</p>
+<ol>
+<li>清理工作缓冲。</li>
+<li>读取 <code>0x80000</code> 级隐藏材料。</li>
+<li>从 <code>qword_16058</code> 相关区域复制 loader 元信息。</li>
+<li>保存 <code>dword_16088</code>，作为 <strong>sub_2C0C</strong> 的 XOR key。</li>
+</ol>
+<p>关联导入:</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>API</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>sub_2BD0</strong></td>
+<td><strong>pread</strong></td>
+<td>早期大块读取</td>
+</tr>
+<tr>
+<td><strong>sub_2B00</strong></td>
+<td><strong>pread</strong></td>
+<td>后续片段读取</td>
+</tr>
+<tr>
+<td><strong>sub_2AB0</strong></td>
+<td><strong>lseek</strong></td>
+<td>调整 fd 偏移</td>
+</tr>
+<tr>
+<td><strong>sub_2B50</strong></td>
+<td><strong>memset</strong></td>
+<td>清理工作缓冲</td>
+</tr>
+</tbody></table>
+<h3 id="5-3-阶段-C-mmap-header-window-并解码"><a href="#5-3-阶段-C-mmap-header-window-并解码" class="headerlink" title="5.3 阶段 C: mmap header window 并解码"></a>5.3 阶段 C: mmap header window 并解码</h3><p>代码范围:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x39a8..0x3b8c</span><br></pre></td></tr></table></figure>
+
+<p>行为:</p>
+<ol>
+<li>通过 <strong>sub_2AC0 -&gt; mmap</strong> 映射一个小窗口。</li>
+<li>调用 <strong>sub_2C0C(base, 0, 0x1000)</strong> 解码头部。</li>
+<li>解析 ELF header 和 program header。</li>
+</ol>
+<p><strong>sub_2C0C</strong> 的核心语义:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">char</span> *<span class="title function_">sub_2C0C</span><span class="params">(base, offset, size)</span> &#123;</span><br><span class="line">    p = base + offset;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; size; i++) &#123;</span><br><span class="line">        p[i] ^= dword_16088;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-4-阶段-D-program-header-遍历与完整映射"><a href="#5-4-阶段-D-program-header-遍历与完整映射" class="headerlink" title="5.4 阶段 D: program header 遍历与完整映射"></a>5.4 阶段 D: program header 遍历与完整映射</h3><p>代码范围:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0x3c20..0x43c8</span><br><span class="line">0x4458..0x480c</span><br></pre></td></tr></table></figure>
+
+<p>行为:</p>
+<ol>
+<li>遍历 <code>PT_LOAD</code> 段。</li>
+<li>计算页对齐后的目标地址和大小。</li>
+<li><code>mmap</code> 新的装载镜像。</li>
+<li>按 program header flags 计算页面权限。</li>
+<li>使用 <code>mprotect</code> 修正权限。</li>
+<li>调用 <code>sub_2C0C</code> 解码大块段内容和表区。</li>
+</ol>
+<p>典型解码调用形态:</p>
+<table>
+<thead>
+<tr>
+<th>调用位置</th>
+<th>参数形态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0x3a14</code></td>
+<td><code>offset=0</code>, <code>size=0x1000</code></td>
+<td>解码头部窗口</td>
+</tr>
+<tr>
+<td><code>0x4550</code></td>
+<td><code>offset=0x40</code>, <code>size=0xf6cac</code></td>
+<td>解码大块段内容</td>
+</tr>
+<tr>
+<td><code>0x4350</code></td>
+<td><code>offset=0</code>, <code>size=0x9160</code></td>
+<td>解码表区或映射片段</td>
+</tr>
+</tbody></table>
+<p>相关导入:</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>API</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>sub_2AC0</strong></td>
+<td><strong>mmap</strong></td>
+<td>创建装载镜像</td>
+</tr>
+<tr>
+<td><strong>sub_2BA0</strong></td>
+<td><strong>mprotect</strong></td>
+<td>调整内存权限</td>
+</tr>
+<tr>
+<td><strong>sub_2BE0</strong></td>
+<td><strong>mprotect</strong></td>
+<td>按 segment flags 二次设权</td>
+</tr>
+<tr>
+<td><strong>sub_2A90</strong></td>
+<td><strong>memcpy</strong></td>
+<td>回写或复制元数据</td>
+</tr>
+</tbody></table>
+<h3 id="5-5-阶段-E-dynamic-section-解析"><a href="#5-5-阶段-E-dynamic-section-解析" class="headerlink" title="5.5 阶段 E: dynamic section 解析"></a>5.5 阶段 E: dynamic section 解析</h3><p><img src="/flowcharts/libDexHelper_init_proc/images/07_dynamic_section_tags.png" alt="dynamic section 解析与 tag 分发"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: <strong>sub_36E0</strong> 中 <code>0x4518</code> jump table 如何把 dynamic tag 分流到 loader 状态。</li>
+<li>关键判断: 先抓四类输出: 基础表、重定位表、生命周期入口、依赖项。</li>
+</ul>
+<p>代码范围:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x44b0..0x4a1c</span><br></pre></td></tr></table></figure>
+
+<p>本阶段的作用是把动态段中的 tag 翻译成 loader 后续可直接使用的状态字段。读这一段时不要把所有 tag 当成同等重要；先抓四类输出即可:</p>
+<ul>
+<li>基础表: <strong>strtab</strong>、<strong>symtab</strong>、<strong>.hash</strong>。</li>
+<li>重定位表: 普通 relocation 和 PLT relocation。</li>
+<li>生命周期入口: init、init_array、fini、fini_array。</li>
+<li>依赖项: <strong>DT_NEEDED</strong> 字符串偏移。</li>
+</ul>
+<p>静态特征:</p>
+<ul>
+<li><code>0x4518</code> 附近存在 dynamic tag jump table。</li>
+<li>分发约 26 类 dynamic tag。</li>
+<li>提取 <strong>strtab</strong>、<strong>symtab</strong>、<strong>.hash</strong>、relocation 表、init&#x2F;init_array、fini&#x2F;fini_array、<strong>DT_NEEDED</strong> 等字段。</li>
+</ul>
+<p>随后 <strong>sub_2B10 -&gt; dlopen</strong> 加载 <strong>DT_NEEDED</strong> 依赖，并保存 handle 数组供 relocation 使用。</p>
+<h3 id="5-6-阶段-F-两轮-relocation"><a href="#5-6-阶段-F-两轮-relocation" class="headerlink" title="5.6 阶段 F: 两轮 relocation"></a>5.6 阶段 F: 两轮 relocation</h3><p><strong>sub_36E0</strong> 调用 <strong>sub_2DC0</strong> 两次:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0x4838 -&gt; sub_2DC0</span><br><span class="line">0x4858 -&gt; sub_2DC0</span><br></pre></td></tr></table></figure>
+
+<p>两轮 relocation 对应两个 relocation 表或两类 relocation 记录。<strong>sub_2DC0</strong> 负责遍历条目、解析符号、写回修正地址。</p>
+<h3 id="5-7-阶段-G-JNI-OnLoad-查找与收尾"><a href="#5-7-阶段-G-JNI-OnLoad-查找与收尾" class="headerlink" title="5.7 阶段 G: JNI_OnLoad 查找与收尾"></a>5.7 阶段 G: <strong>JNI_OnLoad</strong> 查找与收尾</h3><p><img src="/flowcharts/libDexHelper_init_proc/images/05_jni_onload_closeout.png" alt="JNI_OnLoad 查找与收尾流程"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: relocation 完成后如何定位 <strong>JNI_OnLoad</strong> 并完成收尾。</li>
+<li>关键判断: <strong>JNI_OnLoad</strong> 通过 SysV hash 缩小候选，再用 <strong>strcmp</strong> 确认。</li>
+</ul>
+<p>relocation 完成后，loader 继续:</p>
+<ol>
+<li>使用 <strong>sub_2CE8</strong> 计算 <strong>“JNI_OnLoad”</strong> 的 ELF SysV hash。</li>
+<li>通过 bucket&#x2F;chain 遍历候选符号。</li>
+<li>使用 <strong>sub_2B80 -&gt; strcmp</strong> 确认符号名。</li>
+<li>调用 init&#x2F;init_array&#x2F;JNI_OnLoad。</li>
+<li>使用 <strong>sub_2B20 -&gt; __cxa_atexit</strong> 注册析构。</li>
+<li>使用 <strong>sub_2A90 -&gt; memcpy</strong> 回写运行时元数据。</li>
+<li>使用 <strong>sub_2BF0 -&gt; close</strong> 关闭 fd&#x2F;资源。</li>
+</ol>
+<h2 id="6-sub-2DC0-relocation-处理器"><a href="#6-sub-2DC0-relocation-处理器" class="headerlink" title="6. sub_2DC0 relocation 处理器"></a>6. <strong>sub_2DC0</strong> relocation 处理器</h2><p><img src="/flowcharts/libDexHelper_init_proc/images/04_sub_2DC0_relocation.png" alt="sub_2DC0 relocation 子流程"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: relocation 条目的遍历、符号解析和目标地址写回。</li>
+<li>关键判断: <strong>dlsym</strong> 失败后并不立刻终止，特定错误文本会进入 ELF hash fallback。</li>
+</ul>
+<p>阅读重点是符号解析链路: 先尝试 <strong>dlsym</strong>，失败后看 <strong>dlerror</strong> 文本，再在特定错误条件下进入 ELF hash fallback。</p>
+<p><strong>sub_2DC0</strong> 大小 <code>0x4b4</code>，是手动 loader 完成符号修复的关键函数。</p>
+<p>一句话结论: <strong>sub_2DC0</strong> 不是单纯写地址，它同时承担 <strong>找符号</strong> 和 <strong>按 relocation type 写回</strong> 的职责。前者决定 symbol value，后者决定目标位置最终写入什么。</p>
+<h3 id="6-1-输入语义"><a href="#6-1-输入语义" class="headerlink" title="6.1 输入语义"></a>6.1 输入语义</h3><p>按 <strong>sub_36E0</strong> 的调用约定，参数可解释为:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">a1: dynsym/symbol table 基址或条目基址</span><br><span class="line">a2: 字符串表/相关基址</span><br><span class="line">a3: relocation 表</span><br><span class="line">a4: relocation 数量</span><br><span class="line">a5: dlopen handle 数组</span><br><span class="line">a6: handle 数量</span><br><span class="line">a7: 新映射基址/load bias</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-核心流程"><a href="#6-2-核心流程" class="headerlink" title="6.2 核心流程"></a>6.2 核心流程</h3><p>可以按三层理解:</p>
+<ul>
+<li>条目层: 遍历 relocation 记录，拆出 offset、info、addend。</li>
+<li>符号层: 需要符号时先走 <strong>dlsym</strong>，特定失败文本下再走 hash fallback。</li>
+<li>写回层: 按 relocation type 选择加法、PC 相对修正或 load bias 写入。</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">for each relocation:</span><br><span class="line">  1. 解析 relocation offset/info/addend</span><br><span class="line">  2. 从 info 拆出 symbol index 和 relocation type</span><br><span class="line">  3. 若 relocation 需要符号:</span><br><span class="line">       name = strtab + sym.st_name</span><br><span class="line">       for handle in dependency_handles:</span><br><span class="line">           addr = dlsym(handle, name)</span><br><span class="line">           if addr found:</span><br><span class="line">               use addr</span><br><span class="line">           else:</span><br><span class="line">               err = dlerror()</span><br><span class="line">               if strstr(err, &quot;symbol found but not global:&quot;):</span><br><span class="line">                   走 ELF hash bucket/chain fallback</span><br><span class="line">  4. 按 relocation type 写目标地址</span><br></pre></td></tr></table></figure>
+
+<p>关联函数:</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>API&#x2F;语义</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>sub_2B30</strong></td>
+<td><strong>dlsym</strong></td>
+<td>从依赖库 handle 查符号</td>
+</tr>
+<tr>
+<td><strong>sub_2A50</strong></td>
+<td><strong>dlerror</strong></td>
+<td>读取符号解析错误</td>
+</tr>
+<tr>
+<td><strong>sub_2AF0</strong></td>
+<td><strong>strstr</strong></td>
+<td>判断错误是否为非全局符号</td>
+</tr>
+<tr>
+<td><strong>sub_2CE8</strong></td>
+<td>ELF SysV hash</td>
+<td>hash fallback</td>
+</tr>
+<tr>
+<td><strong>sub_2B80</strong></td>
+<td><strong>strcmp</strong></td>
+<td>确认候选符号名</td>
+</tr>
+<tr>
+<td><strong>sub_2AD0</strong></td>
+<td><strong>abort</strong></td>
+<td>致命错误出口</td>
+</tr>
+</tbody></table>
+<h3 id="6-3-relocation-type-写回规则"><a href="#6-3-relocation-type-写回规则" class="headerlink" title="6.3 relocation type 写回规则"></a>6.3 relocation type 写回规则</h3><p>已识别写回规则:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">257 / 258 / 259: 目标位置 += addend + symbol_value</span><br><span class="line">261 / 262:       目标位置 += addend - target_offset + symbol_value</span><br><span class="line">1024 / 1025:     目标位置 = addend + symbol_value</span><br><span class="line">1026:            目标位置 = addend + symbol_value</span><br><span class="line">1027:            目标位置 = addend + load_bias</span><br></pre></td></tr></table></figure>
+
+<h2 id="7-sub-2CE8-ELF-SysV-hash"><a href="#7-sub-2CE8-ELF-SysV-hash" class="headerlink" title="7. sub_2CE8 ELF SysV hash"></a>7. <strong>sub_2CE8</strong> ELF SysV hash</h2><p><img src="/flowcharts/libDexHelper_init_proc/images/08_sub_2CE8_sysv_hash.png" alt="sub_2CE8 ELF SysV hash 算法流程"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: <strong>sub_2CE8</strong> 如何逐字符计算 ELF SysV hash。</li>
+<li>关键判断: 它服务于两个调用点，relocation fallback 和 <strong>JNI_OnLoad</strong> 查找。</li>
+</ul>
+<p><strong>sub_2CE8</strong> 是标准 ELF SysV hash 算法实现:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">h = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">while</span> (*s) &#123;</span><br><span class="line">    h = *s++ + <span class="number">16</span> * h;</span><br><span class="line">    g = h &amp; <span class="number">0xf0000000</span>;</span><br><span class="line">    h = (g ^ h) ^ (g &gt;&gt; <span class="number">24</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> h;</span><br></pre></td></tr></table></figure>
+
+<p>它的阅读价值不在算法本身，而在调用位置。本文中它有两个用途:</p>
+<ol>
+<li>relocation 期间处理 <strong>dlsym</strong> 不能直接解析的符号。</li>
+<li>loader 收尾阶段定位 <strong>“JNI_OnLoad”</strong>。</li>
+</ol>
+<h2 id="8-导入跳板说明"><a href="#8-导入跳板说明" class="headerlink" title="8. 导入跳板说明"></a>8. 导入跳板说明</h2><p><img src="/flowcharts/libDexHelper_init_proc/images/09_import_trampoline.png" alt="导入跳板 &#x2F; PLT0 &#x2F; GOT 解析结构"></p>
+<p>读图结论:</p>
+<ul>
+<li>看什么: 调用点、短跳板、GOT 槽、PLT0 resolver、真实 libc&#x2F;libdl API 的关系。</li>
+<li>关键判断: <code>0x2a50..0x2bf0</code> 大多是导入跳板，不应当和真实逻辑函数同等展开。</li>
+</ul>
+<p><code>0x2a30..0x2bf0</code> 是导入跳板区。典型短跳板形态:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ADRP X16, #got_slot@PAGE</span><br><span class="line">LDR  X17, [X16,#got_slot@PAGEOFF]</span><br><span class="line">ADD  X16, X16, #got_slot@PAGEOFF</span><br><span class="line">BR   X17</span><br></pre></td></tr></table></figure>
+
+<p><strong>sub_2A30</strong> 是 PLT0 resolver 入口:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">0x2a30  stp  x16, x30, [sp,#-0x10]!</span><br><span class="line">0x2a34  adrp x16, qword_15F10</span><br><span class="line">0x2a38  ldr  x17, [x16,#qword_15F10]</span><br><span class="line">0x2a3c  add  x16, x16,#qword_15F10</span><br><span class="line">0x2a40  br   x17</span><br></pre></td></tr></table></figure>
+
+<p>这一节只需要建立一个判断: <code>0x2a50..0x2bf0</code> 这些短函数大多不是业务逻辑，而是到 <strong>libc&#x2F;libdl</strong> 的导入跳板。逐函数分析时应优先关注谁调用了它、传了什么参数，而不是在跳板内部寻找复杂逻辑。</p>
+<p>样本 <strong>.dynsym</strong> 名称被抹空，但文件内保留了导入名字符串池，结合每个跳板的调用点和参数形态可以确定其语义。</p>
+<h2 id="9-阅读结论"><a href="#9-阅读结论" class="headerlink" title="9. 阅读结论"></a>9. 阅读结论</h2><p><strong>libDexHelper.so</strong> 的静态结构可以归纳为:</p>
+<ol>
+<li><strong>.init_array[0]</strong> 指向 <strong>sub_4A78</strong> 内部入口 <code>0x4d1c</code>，这是启动主入口。</li>
+<li><strong>sub_4A78</strong> 先初始化自身上下文和 <strong>sscanf</strong> 指针，再递归进入 maps 检测态。</li>
+<li>maps 检测关注 <strong>libc.so&#x2F;libdl.so&#x2F;linker</strong> 相关小型 <strong>rwx</strong> 映射，命中后走 <strong>kill(getpid(), 9)</strong> 和 <strong>_Exit(3)</strong> 后备退出。</li>
+<li>检测未命中时进入 <strong>sub_36E0</strong>，由它完成隐藏 ELF&#x2F;payload 的读取、映射、解码和 relocation。</li>
+<li><strong>sub_2C0C</strong> 是解码原语，<strong>sub_2CE8</strong> 是符号 hash 原语，<strong>sub_2DC0</strong> 是 relocation 原语。</li>
+<li><strong>sub_36E0</strong> 后段定位并调用 <strong>JNI_OnLoad</strong>，然后注册析构、回写元数据、关闭资源。</li>
+<li><strong>.fini_array[0]</strong> 指向 IDA 命名 <strong>start</strong> 的 fini bridge，配合 <strong>sub_4F84</strong> 形成析构注册与触发闭环。</li>
+</ol>
+<p>按函数覆盖范围看，本文已覆盖 <strong>libDexHelper.so</strong> 当前 IDA 函数边界内的全部 35 个函数。</p>
+<h2 id="10-检测点汇总"><a href="#10-检测点汇总" class="headerlink" title="10. 检测点汇总"></a>10. 检测点汇总</h2><p>本节只汇总检测面，不重复 loader、relocation 和导入跳板细节。先给出完整链路:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">sub_4A78@0x4d1c</span><br><span class="line">  -&gt; 初始化自身基址和 sscanf</span><br><span class="line">  -&gt; sub_4A78@0x4a78</span><br><span class="line">  -&gt; 读取 /proc/self/maps</span><br><span class="line">  -&gt; 筛选 libc.so / libdl.so / linker</span><br><span class="line">  -&gt; 判断小型 rwx 映射</span><br><span class="line">  -&gt; 命中: 0x4e0c -&gt; 0x4f38 -&gt; kill(getpid(), SIGKILL) -&gt; _Exit(3)</span><br><span class="line">  -&gt; 未命中: 0x4ee8 -&gt; sub_36E0</span><br></pre></td></tr></table></figure>
+
+<h3 id="10-1-入口与对象"><a href="#10-1-入口与对象" class="headerlink" title="10.1 入口与对象"></a>10.1 入口与对象</h3><p><strong>libDexHelper.so</strong> 内真正构成检测逻辑的是 <strong>sub_4A78</strong>。它有两个入口状态:</p>
+<ul>
+<li><code>0x4d1c</code>: <strong>.init_array[0]</strong> 指向的内部入口，负责自身基址定位和 <strong>sscanf</strong> 指针初始化。</li>
+<li><code>0x4a78</code>: 实际检测入口，由 <code>0x4e04</code> 递归调用进入，负责扫描 <code>/proc/self/maps</code>。</li>
+</ul>
+<p>检测对象是 <code>/proc/self/maps</code>。执行态通过 <strong>sub_2B40 -&gt; fopen(“&#x2F;proc&#x2F;self&#x2F;maps”, “r”)</strong> 打开 maps，通过 <strong>sub_2A80 -&gt; fgets(line, 0x400, fp)</strong> 逐行读取，再由 <strong>off_16040 -&gt; sscanf</strong> 解析地址范围和权限字段。</p>
+<p>这里的关键点是: 它不按进程名判断，也不依赖单一命名字符串；它关心的是内存映射形态。</p>
+<h3 id="10-2-匹配条件"><a href="#10-2-匹配条件" class="headerlink" title="10.2 匹配条件"></a>10.2 匹配条件</h3><p>检测匹配目标集中在三类路径: <strong>libc.so</strong>、<strong>libdl.so</strong>、<strong>linker</strong>。只有当前 maps 行路径匹配这些目标之一时，才继续解析权限字符。</p>
+<p>权限格式来自字符串 <code>%lx-%lx %c%c%c%*c %*s %*s %*d %*s</code>，对应 start、end、r、w、x 等字段。</p>
+<p>核心命中条件是小型 <strong>rwx</strong> 映射:</p>
+<ul>
+<li>权限字符同时满足 <strong>r &#x3D;&#x3D; ‘r’</strong>、<strong>w &#x3D;&#x3D; ‘w’</strong>、<strong>x &#x3D;&#x3D; ‘x’</strong>。</li>
+<li>映射长度满足 <code>end - start &lt;= 0x4000</code>。</li>
+</ul>
+<p>条件命中后 <strong>sub_4A78</strong> 返回 1；遍历结束仍未命中时关闭 maps 并返回 0。</p>
+<h3 id="10-3-结果消费与失败链"><a href="#10-3-结果消费与失败链" class="headerlink" title="10.3 结果消费与失败链"></a>10.3 结果消费与失败链</h3><p>检测结果在 <code>0x4e08..0x4e0c</code> 被消费:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0x4e04  bl    sub_4A78</span><br><span class="line">0x4e08  uxtb  w0, w0</span><br><span class="line">0x4e0c  cbnz  w0, loc_4F38</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>0x4e08</code> 只做返回值规整，<code>0x4e0c</code> 才是是否进入失败链的条件跳转。返回值非零时进入 <code>0x4f38</code>；返回值为 0 时继续正常初始化，并在 <code>0x4ee8</code> 调用 <strong>sub_36E0</strong>。</p>
+<p>失败链从 <code>0x4f38</code> 开始。<strong>sub_2A70 -&gt; getpid</strong> 取得当前进程 pid，随后设置 <code>x1 = 9</code>、<code>x8 = 0x81</code> 并在 <code>0x4f48</code> 执行 <strong>svc #0</strong>。在 AArch64 Linux syscall 约定下，这就是 <strong>kill(getpid(), SIGKILL)</strong>。</p>
+<p>如果 syscall 返回，后续还有一条后备退出链。<strong>sub_2A60</strong> 用于处理 errno 存储位置，随后 <code>mov w0, #3; bl sub_2BB0</code> 进入 <strong>_Exit(3)</strong> 风格退出。这个结构说明检测命中后的终止路径不是单点，而是 <strong>kill</strong> 加 <strong>_Exit</strong> 的双保险。</p>
+<h3 id="10-4-非主动检测出口"><a href="#10-4-非主动检测出口" class="headerlink" title="10.4 非主动检测出口"></a>10.4 非主动检测出口</h3><p><strong>sub_2AD0 -&gt; abort</strong> 是 relocation 处理器 <strong>sub_2DC0</strong> 的致命错误出口，不属于 maps 检测点。它在符号解析、relocation 类型或写回过程遇到不可恢复状态时终止流程。</p>
+<p><strong>sub_2AE0 -&gt; __stack_chk_fail</strong> 是编译器栈保护失败出口，也不属于壳的主动 maps 检测点。它用于函数栈 canary 异常时的通用保护收口。</p>
+<p>因此，本库可确认的主动检测面只有一条主线: <strong>sub_4A78</strong> 读取 <code>/proc/self/maps</code>，筛选 <strong>libc.so&#x2F;libdl.so&#x2F;linker</strong>，判断小型 <strong>rwx</strong> 映射，非零结果经 <code>0x4e0c</code> 转入 <code>0x4f38</code> 失败链。<strong>abort</strong> 和 <strong>__stack_chk_fail</strong> 是错误&#x2F;保护出口，应在分析中单独归类。</p>
+<h2 id="11-附录-全函数地址索引"><a href="#11-附录-全函数地址索引" class="headerlink" title="11. 附录: 全函数地址索引"></a>11. 附录: 全函数地址索引</h2><p>本附录只用于查地址，不作为首次阅读入口。正文先读 7 个真实逻辑函数，28 个导入跳板按支撑层整体理解。</p>
+<h3 id="11-1-真实逻辑函数"><a href="#11-1-真实逻辑函数" class="headerlink" title="11.1 真实逻辑函数"></a>11.1 真实逻辑函数</h3><table>
+<thead>
+<tr>
+<th>地址</th>
+<th>IDA 名称</th>
+<th align="right">大小</th>
+<th>归属图层</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0x2c00</code></td>
+<td>IDA 命名 <strong>start</strong></td>
+<td align="right"><code>0x0c</code></td>
+<td>fini 生命周期</td>
+<td>实际是 fini bridge，调用 <strong>__cxa_finalize(dso_handle)</strong></td>
+</tr>
+<tr>
+<td><code>0x2c0c</code></td>
+<td><strong>sub_2C0C</strong></td>
+<td align="right"><code>0xdc</code></td>
+<td>解码图</td>
+<td>单字节 XOR 解码 helper</td>
+</tr>
+<tr>
+<td><code>0x2ce8</code></td>
+<td><strong>sub_2CE8</strong></td>
+<td align="right"><code>0xd8</code></td>
+<td>relocation&#x2F;JNI 图</td>
+<td>ELF SysV hash helper</td>
+</tr>
+<tr>
+<td><code>0x2dc0</code></td>
+<td><strong>sub_2DC0</strong></td>
+<td align="right"><code>0x4b4</code></td>
+<td>relocation 图</td>
+<td>relocation 处理器</td>
+</tr>
+<tr>
+<td><code>0x36e0</code></td>
+<td><strong>sub_36E0</strong></td>
+<td align="right"><code>0x1398</code></td>
+<td>主 loader 图</td>
+<td>手动 loader 主体</td>
+</tr>
+<tr>
+<td><code>0x4a78</code></td>
+<td><strong>sub_4A78</strong></td>
+<td align="right"><code>0x50c</code></td>
+<td>init 门卫图</td>
+<td>自定位、maps 检测、失败终止和进入 loader</td>
+</tr>
+<tr>
+<td><code>0x4f84</code></td>
+<td><strong>sub_4F84</strong></td>
+<td align="right"><code>0x18</code></td>
+<td>fini 生命周期</td>
+<td><strong>__cxa_atexit</strong> 注册桥</td>
+</tr>
+</tbody></table>
+<h3 id="11-2-导入跳板与辅助出口"><a href="#11-2-导入跳板与辅助出口" class="headerlink" title="11.2 导入跳板与辅助出口"></a>11.2 导入跳板与辅助出口</h3><table>
+<thead>
+<tr>
+<th>地址</th>
+<th>IDA 名称</th>
+<th align="right">大小</th>
+<th>归属图层</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0x2a30</code></td>
+<td><strong>sub_2A30</strong></td>
+<td align="right"><code>0x14</code></td>
+<td>导入跳板区</td>
+<td>PLT0 resolver 入口，所有导入跳板最终经它或相邻 GOT 槽跳转</td>
+</tr>
+<tr>
+<td><code>0x2a50</code></td>
+<td><strong>sub_2A50</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>relocation 图</td>
+<td><strong>dlerror</strong>，在 <strong>dlsym</strong> 后读取错误信息</td>
+</tr>
+<tr>
+<td><code>0x2a60</code></td>
+<td><strong>sub_2A60</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_4A78</strong> 失败链</td>
+<td>errno 存储位置，处理失败 syscall 返回</td>
+</tr>
+<tr>
+<td><code>0x2a70</code></td>
+<td><strong>sub_2A70</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_4A78</strong> 失败链</td>
+<td><strong>getpid</strong>，给 kill syscall 提供 pid</td>
+</tr>
+<tr>
+<td><code>0x2a80</code></td>
+<td><strong>sub_2A80</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>maps 读取链</td>
+<td><strong>fgets</strong>，逐行读取 <code>/proc/self/maps</code></td>
+</tr>
+<tr>
+<td><code>0x2a90</code></td>
+<td><strong>sub_2A90</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> 收尾</td>
+<td><strong>memcpy</strong>，复制&#x2F;回写运行时元数据</td>
+</tr>
+<tr>
+<td><code>0x2aa0</code></td>
+<td><strong>sub_2AA0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>fini 生命周期</td>
+<td><strong>__cxa_finalize</strong>，析构收口</td>
+</tr>
+<tr>
+<td><code>0x2ab0</code></td>
+<td><strong>sub_2AB0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> loader</td>
+<td><strong>lseek</strong>，调整 fd 偏移</td>
+</tr>
+<tr>
+<td><code>0x2ac0</code></td>
+<td><strong>sub_2AC0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> loader</td>
+<td><strong>mmap</strong>，映射 header window 和完整装载镜像</td>
+</tr>
+<tr>
+<td><code>0x2ad0</code></td>
+<td><strong>sub_2AD0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>relocation 图</td>
+<td><strong>abort</strong>，relocation 致命错误出口</td>
+</tr>
+<tr>
+<td><code>0x2ae0</code></td>
+<td><strong>sub_2AE0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>辅助&#x2F;保护</td>
+<td><strong>__stack_chk_fail</strong>，栈保护失败出口</td>
+</tr>
+<tr>
+<td><code>0x2af0</code></td>
+<td><strong>sub_2AF0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>relocation 图</td>
+<td><strong>strstr</strong>，判断 <strong>dlerror</strong> 是否含非全局符号提示</td>
+</tr>
+<tr>
+<td><code>0x2b00</code></td>
+<td><strong>sub_2B00</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> loader</td>
+<td><strong>pread</strong>，读取隐藏材料或 segment 数据</td>
+</tr>
+<tr>
+<td><code>0x2b10</code></td>
+<td><strong>sub_2B10</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>init&#x2F;loader 依赖链</td>
+<td><strong>dlopen</strong>，打开 libc 和 DT_NEEDED 依赖</td>
+</tr>
+<tr>
+<td><code>0x2b20</code></td>
+<td><strong>sub_2B20</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>fini 生命周期</td>
+<td><strong>__cxa_atexit</strong>，注册析构回调</td>
+</tr>
+<tr>
+<td><code>0x2b30</code></td>
+<td><strong>sub_2B30</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>init&#x2F;relocation 图</td>
+<td><strong>dlsym</strong>，解析 <strong>sscanf</strong> 和依赖符号</td>
+</tr>
+<tr>
+<td><code>0x2b40</code></td>
+<td><strong>sub_2B40</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>maps 读取链</td>
+<td><strong>fopen</strong>，打开 <code>/proc/self/maps</code></td>
+</tr>
+<tr>
+<td><code>0x2b50</code></td>
+<td><strong>sub_2B50</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> loader</td>
+<td><strong>memset</strong>，清理工作缓冲</td>
+</tr>
+<tr>
+<td><code>0x2b60</code></td>
+<td><strong>sub_2B60</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>maps 读取链</td>
+<td><strong>fclose</strong>，关闭 maps 文件句柄</td>
+</tr>
+<tr>
+<td><code>0x2b70</code></td>
+<td><strong>sub_2B70</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>dump 辅助</td>
+<td><strong>isprint</strong>，判断可打印字符</td>
+</tr>
+<tr>
+<td><code>0x2b80</code></td>
+<td><strong>sub_2B80</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>relocation&#x2F;JNI 图</td>
+<td><strong>strcmp</strong>，确认符号名</td>
+</tr>
+<tr>
+<td><code>0x2b90</code></td>
+<td><strong>sub_2B90</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>dump 辅助</td>
+<td><strong>sprintf</strong>，格式化十六进制 dump 行</td>
+</tr>
+<tr>
+<td><code>0x2ba0</code></td>
+<td><strong>sub_2BA0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> loader</td>
+<td><strong>mprotect</strong>，调整装载镜像权限</td>
+</tr>
+<tr>
+<td><code>0x2bb0</code></td>
+<td><strong>sub_2BB0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_4A78</strong> 失败链</td>
+<td><strong>_Exit</strong>，kill 后备退出</td>
+</tr>
+<tr>
+<td><code>0x2bc0</code></td>
+<td><strong>sub_2BC0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td>dump 辅助</td>
+<td><strong>strlen</strong>，取格式化字符串长度</td>
+</tr>
+<tr>
+<td><code>0x2bd0</code></td>
+<td><strong>sub_2BD0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> loader</td>
+<td><strong>pread</strong>，早期读取 <code>0x80000</code> 级隐藏材料</td>
+</tr>
+<tr>
+<td><code>0x2be0</code></td>
+<td><strong>sub_2BE0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> loader</td>
+<td><strong>mprotect</strong>，按 program header flags 设置页面保护</td>
+</tr>
+<tr>
+<td><code>0x2bf0</code></td>
+<td><strong>sub_2BF0</strong></td>
+<td align="right"><code>0x10</code></td>
+<td><strong>sub_36E0</strong> 收尾</td>
+<td><strong>close</strong>，关闭 fd&#x2F;资源</td>
+</tr>
+</tbody></table>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/autorun886">autorun</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://www.autorun.top/post/libdexhelper-static-analysis.html">http://www.autorun.top/post/libdexhelper-static-analysis.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://www.autorun.top" target="_blank">autorun's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Android/">Android</a><a class="post-meta__tags" href="/tags/%E5%8A%A0%E5%9B%BA/">加固</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar-card.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/post/ijiami-frida-bypass.html" title="某加密企业版 Frida 检测绕过"><div class="cover" style="background: #5a4548"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">某加密企业版 Frida 检测绕过</div></div><div class="info-2"><div class="info-item-1">某加密企业版的 Frida 检测与绕过分析。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/post/ijiami-frida-bypass.html" title="某加密企业版 Frida 检测绕过"><div class="cover" style="background: #5a4548"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-25</div><div class="info-item-2">某加密企业版 Frida 检测绕过</div></div><div class="info-2"><div class="info-item-1">某加密企业版的 Frida 检测与绕过分析。</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar-card.jpg" width="104" height="104" decoding="async" onerror="this.onerror=null;this.src='http://cdn.autorun.top/img/friend_404.gif'" alt="autorun 头像"/></div><div class="author-info-name">autorun</div><div class="author-info-description">逆向、安全、AI 与爬虫笔记</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/autorun886"><i class="fab fa-github"></i><span>查看 GitHub</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/autorun886" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:sunyiping1208@outlook.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="/atom.xml" target="_blank" title="RSS"><i class="fas fa-rss" style="color: #FFA500;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">最近更新：逆向分析、安全实验、AI 工程与爬虫实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#libDexHelper-so-%E9%9D%99%E6%80%81%E5%88%86%E6%9E%90"><span class="toc-text">libDexHelper.so 静态分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%BB%E5%9B%BE%E5%85%88%E8%A1%8C"><span class="toc-text">1. 总图先行</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E9%9D%99%E6%80%81%E6%95%B4%E4%BD%93%E8%B0%83%E7%94%A8%E9%93%BE"><span class="toc-text">1.1 静态整体调用链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-init-proc-%E6%80%BB%E6%B5%81%E7%A8%8B"><span class="toc-text">1.2 init_proc 总流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%8E%E5%9B%BE%E5%88%B0%E5%87%BD%E6%95%B0%E5%88%86%E7%BB%84"><span class="toc-text">2. 从图到函数分组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%87%BD%E6%95%B0"><span class="toc-text">3. 生命周期函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-IDA-%E5%91%BD%E5%90%8D-start-0x2c00"><span class="toc-text">3.1 IDA 命名 start - 0x2c00</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-sub-4F84-0x4f84"><span class="toc-text">3.2 sub_4F84 - 0x4f84</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-sub-4A78-%E9%97%A8%E5%8D%AB%E9%93%BE"><span class="toc-text">4. sub_4A78 门卫链</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%88%9D%E5%A7%8B%E5%8C%96%E6%80%81"><span class="toc-text">4.1 初始化态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%A3%80%E6%B5%8B%E6%80%81"><span class="toc-text">4.2 检测态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%A4%B1%E8%B4%A5%E5%88%86%E6%94%AF"><span class="toc-text">4.3 失败分支</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E6%AD%A3%E5%B8%B8%E5%88%86%E6%94%AF"><span class="toc-text">4.4 正常分支</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-sub-36E0-%E4%B8%BB-loader"><span class="toc-text">5. sub_36E0 主 loader</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E9%98%B6%E6%AE%B5-A-%E5%AE%9A%E4%BD%8D%E8%87%AA%E8%BA%AB%E6%98%A0%E5%B0%84"><span class="toc-text">5.1 阶段 A: 定位自身映射</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E9%98%B6%E6%AE%B5-B-%E8%AF%BB%E5%8F%96%E5%85%83%E4%BF%A1%E6%81%AF%E5%92%8C-XOR-key"><span class="toc-text">5.2 阶段 B: 读取元信息和 XOR key</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E9%98%B6%E6%AE%B5-C-mmap-header-window-%E5%B9%B6%E8%A7%A3%E7%A0%81"><span class="toc-text">5.3 阶段 C: mmap header window 并解码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E9%98%B6%E6%AE%B5-D-program-header-%E9%81%8D%E5%8E%86%E4%B8%8E%E5%AE%8C%E6%95%B4%E6%98%A0%E5%B0%84"><span class="toc-text">5.4 阶段 D: program header 遍历与完整映射</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E9%98%B6%E6%AE%B5-E-dynamic-section-%E8%A7%A3%E6%9E%90"><span class="toc-text">5.5 阶段 E: dynamic section 解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-6-%E9%98%B6%E6%AE%B5-F-%E4%B8%A4%E8%BD%AE-relocation"><span class="toc-text">5.6 阶段 F: 两轮 relocation</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-7-%E9%98%B6%E6%AE%B5-G-JNI-OnLoad-%E6%9F%A5%E6%89%BE%E4%B8%8E%E6%94%B6%E5%B0%BE"><span class="toc-text">5.7 阶段 G: JNI_OnLoad 查找与收尾</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-sub-2DC0-relocation-%E5%A4%84%E7%90%86%E5%99%A8"><span class="toc-text">6. sub_2DC0 relocation 处理器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E8%BE%93%E5%85%A5%E8%AF%AD%E4%B9%89"><span class="toc-text">6.1 输入语义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E6%A0%B8%E5%BF%83%E6%B5%81%E7%A8%8B"><span class="toc-text">6.2 核心流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-relocation-type-%E5%86%99%E5%9B%9E%E8%A7%84%E5%88%99"><span class="toc-text">6.3 relocation type 写回规则</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-sub-2CE8-ELF-SysV-hash"><span class="toc-text">7. sub_2CE8 ELF SysV hash</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E5%AF%BC%E5%85%A5%E8%B7%B3%E6%9D%BF%E8%AF%B4%E6%98%8E"><span class="toc-text">8. 导入跳板说明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E9%98%85%E8%AF%BB%E7%BB%93%E8%AE%BA"><span class="toc-text">9. 阅读结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#10-%E6%A3%80%E6%B5%8B%E7%82%B9%E6%B1%87%E6%80%BB"><span class="toc-text">10. 检测点汇总</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#10-1-%E5%85%A5%E5%8F%A3%E4%B8%8E%E5%AF%B9%E8%B1%A1"><span class="toc-text">10.1 入口与对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-2-%E5%8C%B9%E9%85%8D%E6%9D%A1%E4%BB%B6"><span class="toc-text">10.2 匹配条件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-3-%E7%BB%93%E6%9E%9C%E6%B6%88%E8%B4%B9%E4%B8%8E%E5%A4%B1%E8%B4%A5%E9%93%BE"><span class="toc-text">10.3 结果消费与失败链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-4-%E9%9D%9E%E4%B8%BB%E5%8A%A8%E6%A3%80%E6%B5%8B%E5%87%BA%E5%8F%A3"><span class="toc-text">10.4 非主动检测出口</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#11-%E9%99%84%E5%BD%95-%E5%85%A8%E5%87%BD%E6%95%B0%E5%9C%B0%E5%9D%80%E7%B4%A2%E5%BC%95"><span class="toc-text">11. 附录: 全函数地址索引</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#11-1-%E7%9C%9F%E5%AE%9E%E9%80%BB%E8%BE%91%E5%87%BD%E6%95%B0"><span class="toc-text">11.1 真实逻辑函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-2-%E5%AF%BC%E5%85%A5%E8%B7%B3%E6%9D%BF%E4%B8%8E%E8%BE%85%E5%8A%A9%E5%87%BA%E5%8F%A3"><span class="toc-text">11.2 导入跳板与辅助出口</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/post/libdexhelper-static-analysis.html" title="libDexHelper.so 静态分析"><div style="background: #242830"></div></a><div class="content"><a class="title" href="/post/libdexhelper-static-analysis.html" title="libDexHelper.so 静态分析">libDexHelper.so 静态分析</a><time datetime="2026-08-25T06:00:00.000Z" title="发表于 2026-08-25 14:00:00">2026-08-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/post/ijiami-frida-bypass.html" title="某加密企业版 Frida 检测绕过"><div style="background: #5a4548"></div></a><div class="content"><a class="title" href="/post/ijiami-frida-bypass.html" title="某加密企业版 Frida 检测绕过">某加密企业版 Frida 检测绕过</a><time datetime="2026-08-25T05:00:00.000Z" title="发表于 2026-08-25 13:00:00">2026-08-25</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025&ndash;2026 autorun</span></div><div class="footer_custom_text"><a href="https://beian.mps.gov.cn/#/query/webSearch?code=43010402002669" rel="noreferrer" target="_blank"><img src="http://cdn.autorun.top/img/备案图标.png" alt="公安备案图标" style="height:1em;vertical-align:middle;margin-right:4px;"/>湘公网安备43010402002669号</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.9/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || item.innerHTML || ""
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    if (e.request.status === 404) {
+      false
+        ? pjax.loadUrl('/404.html')
+        : window.location.href = e.request.responseURL
+    }
+  })
+})</script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.4"></script></div></div></body></html>

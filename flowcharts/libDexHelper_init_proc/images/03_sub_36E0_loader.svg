@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="740" height="1816" viewBox="0 0 740 1816">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#94a3b8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .bg{fill:#f8fafc}
+    .title{font:700 28px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#0f172a}
+    .box{fill:#ffffff;stroke:#475569;stroke-width:1.4;rx:8;filter:url(#shadow)}
+    .decision{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5;filter:url(#shadow)}
+    .term{fill:#fee2e2;stroke:#991b1b;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .ok{fill:#ecfdf5;stroke:#047857;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .nodeText{font:500 16px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#111827}
+    .edge{stroke:#334155;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+    .edgeText{font:600 14px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#334155}
+  </style>
+<rect class="bg" x="0" y="0" width="740" height="1816"/>
+<text class="title" x="370" y="44" text-anchor="middle">sub_36E0 主 Loader 全流程</text>
+<path class="edge" d="M370,154 L370,188"/>
+
+<path class="edge" d="M370,260 L370,294"/>
+
+<path class="edge" d="M370,366 L370,400"/>
+
+<path class="edge" d="M370,472 L370,506"/>
+
+<path class="edge" d="M370,578 L370,612"/>
+
+<path class="edge" d="M370,684 L370,718"/>
+
+<path class="edge" d="M370,790 L370,824"/>
+
+<path class="edge" d="M370,896 L370,930"/>
+
+<path class="edge" d="M370,1002 L370,1036"/>
+
+<path class="edge" d="M370,1108 L370,1142"/>
+
+<path class="edge" d="M370,1214 L370,1248"/>
+
+<path class="edge" d="M370,1320 L370,1354"/>
+
+<path class="edge" d="M370,1426 L370,1460"/>
+
+<path class="edge" d="M370,1532 L370,1566"/>
+
+<path class="edge" d="M370,1638 L370,1672"/>
+
+<rect class="box" x="190" y="82" width="360" height="72"/>
+<text class="nodeText" x="370" y="112" text-anchor="middle">sub_36E0 入口</text>
+<text class="nodeText" x="370" y="134" text-anchor="middle">caller: sub_4A78+0x4eec</text>
+<rect class="box" x="190" y="188" width="360" height="72"/>
+<text class="nodeText" x="370" y="218" text-anchor="middle">打开 /proc/self/maps</text>
+<text class="nodeText" x="370" y="240" text-anchor="middle">定位当前 so 映射边界</text>
+<rect class="box" x="190" y="294" width="360" height="72"/>
+<text class="nodeText" x="370" y="324" text-anchor="middle">读取隐藏元信息</text>
+<text class="nodeText" x="370" y="346" text-anchor="middle">保存 dword_16088 XOR key</text>
+<rect class="box" x="190" y="400" width="360" height="72"/>
+<text class="nodeText" x="370" y="430" text-anchor="middle">mmap header window</text>
+<text class="nodeText" x="370" y="452" text-anchor="middle">sub_2C0C 解码 0x1000</text>
+<rect class="box" x="190" y="506" width="360" height="72"/>
+<text class="nodeText" x="370" y="536" text-anchor="middle">解析 ELF header</text>
+<text class="nodeText" x="370" y="558" text-anchor="middle">解析 program header</text>
+<rect class="box" x="190" y="612" width="360" height="72"/>
+<text class="nodeText" x="370" y="642" text-anchor="middle">遍历 PT_LOAD</text>
+<text class="nodeText" x="370" y="664" text-anchor="middle">mmap 新装载镜像</text>
+<rect class="box" x="190" y="718" width="360" height="72"/>
+<text class="nodeText" x="370" y="748" text-anchor="middle">pread/复制段数据</text>
+<text class="nodeText" x="370" y="770" text-anchor="middle">mprotect 设置权限</text>
+<rect class="box" x="190" y="824" width="360" height="72"/>
+<text class="nodeText" x="370" y="854" text-anchor="middle">sub_2C0C 解码段内容</text>
+<text class="nodeText" x="370" y="876" text-anchor="middle">payload/表区</text>
+<rect class="box" x="190" y="930" width="360" height="72"/>
+<text class="nodeText" x="370" y="960" text-anchor="middle">解析 dynamic section</text>
+<text class="nodeText" x="370" y="982" text-anchor="middle">strtab/symtab/hash/reloc/init/DT_NEEDED</text>
+<rect class="box" x="190" y="1036" width="360" height="72"/>
+<text class="nodeText" x="370" y="1077" text-anchor="middle">dlopen 依赖库</text>
+<rect class="box" x="190" y="1142" width="360" height="72"/>
+<text class="nodeText" x="370" y="1172" text-anchor="middle">sub_2DC0 relocation pass #1</text>
+<text class="nodeText" x="370" y="1194" text-anchor="middle">count=0x6a3</text>
+<rect class="box" x="190" y="1248" width="360" height="72"/>
+<text class="nodeText" x="370" y="1278" text-anchor="middle">sub_2DC0 relocation pass #2</text>
+<text class="nodeText" x="370" y="1300" text-anchor="middle">count=0x277</text>
+<rect class="box" x="190" y="1354" width="360" height="72"/>
+<text class="nodeText" x="370" y="1384" text-anchor="middle">sub_2CE8 查找 JNI_OnLoad</text>
+<text class="nodeText" x="370" y="1406" text-anchor="middle">strcmp 匹配符号名</text>
+<rect class="box" x="190" y="1460" width="360" height="72"/>
+<text class="nodeText" x="370" y="1501" text-anchor="middle">调用 init/init_array/JNI_OnLoad</text>
+<rect class="box" x="190" y="1566" width="360" height="72"/>
+<text class="nodeText" x="370" y="1596" text-anchor="middle">__cxa_atexit 注册</text>
+<text class="nodeText" x="370" y="1618" text-anchor="middle">memcpy 回写元数据</text>
+<rect class="ok" x="190" y="1672" width="360" height="72"/>
+<text class="nodeText" x="370" y="1702" text-anchor="middle">close fd/资源</text>
+<text class="nodeText" x="370" y="1724" text-anchor="middle">sub_36E0 返回 0</text>
+</svg>

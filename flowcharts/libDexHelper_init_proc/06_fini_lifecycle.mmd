@@ -1,0 +1,30 @@
+﻿flowchart TD
+    A["libDexHelper.so 生命周期"]
+
+    A --> B["加载期\n.init_array[0] -> sub_4A78@0x4d1c"]
+    B --> C["sub_4A78 检测通过"]
+    C --> D["sub_36E0 manual loader"]
+    D --> E["解析 stage-2 dynamic section"]
+    E --> E1["记录 init / init_array"]
+    E --> E2["记录 fini / fini_array"]
+    E1 --> F["调用 stage-2 init / JNI_OnLoad"]
+    E2 --> G["通过 __cxa_atexit 注册\nstage-2 析构回调"]
+
+    A --> H["运行期注册桥\nsub_4F84 @ 0x4f84"]
+    H --> I["x0 = loc_4F6C\n析构函数"]
+    H --> J["x1 = 调用者传入对象"]
+    H --> K["x2 = unk_16000\nDSO handle"]
+    I --> L["sub_2B20 -> __cxa_atexit"]
+    J --> L
+    K --> L
+    L --> M["登记到 libc 析构表\n等待 so unload / process exit"]
+
+    A --> N["卸载期\n.fini_array[0]"]
+    N --> O["0x15d00\nR_AARCH64_RELATIVE +0x2c00"]
+    O --> P["start @ 0x2c00"]
+    P --> Q["x0 = &unk_16000"]
+    Q --> R["sub_2AA0 -> __cxa_finalize"]
+    R --> S["执行与 unk_16000 关联的\n__cxa_atexit 回调"]
+    S --> T["loc_4F6C / stage-2 fini 回调"]
+    T --> U["libDexHelper.so fini 完成"]
+

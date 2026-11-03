@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="920" viewBox="0 0 1420 920">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#94a3b8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .bg{fill:#f8fafc}
+    .title{font:700 28px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#0f172a}
+    .box{fill:#ffffff;stroke:#475569;stroke-width:1.4;rx:8;filter:url(#shadow)}
+    .decision{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5;filter:url(#shadow)}
+    .term{fill:#fee2e2;stroke:#991b1b;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .ok{fill:#ecfdf5;stroke:#047857;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .nodeText{font:500 16px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#111827}
+    .edge{stroke:#334155;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+    .edgeText{font:600 14px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#334155}
+  </style>
+<rect class="bg" x="0" y="0" width="1420" height="920"/>
+<text class="title" x="710" y="44" text-anchor="middle">libDexHelper.so fini / 析构生命周期流程</text>
+<path class="edge" d="M550,118 L400,226"/>
+
+<path class="edge" d="M240,262 L240,300"/>
+
+<path class="edge" d="M240,372 L240,410"/>
+
+<path class="edge" d="M240,482 L240,520"/>
+
+<path class="edge" d="M240,482 L240,630"/>
+
+<path class="edge" d="M710,154 L710,190"/>
+
+<path class="edge" d="M710,262 L710,300"/>
+
+<path class="edge" d="M710,372 L710,410"/>
+
+<path class="edge" d="M710,482 L710,520"/>
+
+<path class="edge" d="M710,592 L710,630"/>
+
+<path class="edge" d="M870,118 L1020,226"/>
+
+<path class="edge" d="M1180,262 L1180,300"/>
+
+<path class="edge" d="M1180,372 L1180,410"/>
+
+<path class="edge" d="M1180,482 L1180,520"/>
+
+<path class="edge" d="M1180,592 L1180,630"/>
+
+<path class="edge" d="M1180,702 L1180,740"/>
+
+<path class="edge" d="M400,666 L1020,666"/>
+
+<path class="edge" d="M870,666 L1020,666"/>
+
+<rect class="box" x="550" y="82" width="320" height="72"/>
+<text class="nodeText" x="710" y="112" text-anchor="middle">libDexHelper.so</text>
+<text class="nodeText" x="710" y="134" text-anchor="middle">生命周期</text>
+<rect class="box" x="80" y="190" width="320" height="72"/>
+<text class="nodeText" x="240" y="220" text-anchor="middle">加载期</text>
+<text class="nodeText" x="240" y="242" text-anchor="middle">.init_array[0] -&gt; sub_4A78@0x4d1c</text>
+<rect class="box" x="80" y="300" width="320" height="72"/>
+<text class="nodeText" x="240" y="330" text-anchor="middle">sub_4A78 检测通过</text>
+<text class="nodeText" x="240" y="352" text-anchor="middle">进入 sub_36E0</text>
+<rect class="box" x="80" y="410" width="320" height="72"/>
+<text class="nodeText" x="240" y="440" text-anchor="middle">解析 stage-2 dynamic section</text>
+<text class="nodeText" x="240" y="462" text-anchor="middle">init/fini/fini_array</text>
+<rect class="box" x="80" y="520" width="320" height="72"/>
+<text class="nodeText" x="240" y="550" text-anchor="middle">调用 stage-2 init</text>
+<text class="nodeText" x="240" y="572" text-anchor="middle">与 JNI_OnLoad</text>
+<rect class="ok" x="80" y="630" width="320" height="72"/>
+<text class="nodeText" x="240" y="660" text-anchor="middle">注册 stage-2 fini 回调</text>
+<text class="nodeText" x="240" y="682" text-anchor="middle">__cxa_atexit</text>
+<rect class="box" x="550" y="190" width="320" height="72"/>
+<text class="nodeText" x="710" y="220" text-anchor="middle">运行期注册桥</text>
+<text class="nodeText" x="710" y="242" text-anchor="middle">sub_4F84 @ 0x4f84</text>
+<rect class="box" x="550" y="300" width="320" height="72"/>
+<text class="nodeText" x="710" y="330" text-anchor="middle">x0 = loc_4F6C</text>
+<text class="nodeText" x="710" y="352" text-anchor="middle">析构函数</text>
+<rect class="box" x="550" y="410" width="320" height="72"/>
+<text class="nodeText" x="710" y="440" text-anchor="middle">x1 = caller object</text>
+<text class="nodeText" x="710" y="462" text-anchor="middle">x2 = unk_16000 DSO handle</text>
+<rect class="box" x="550" y="520" width="320" height="72"/>
+<text class="nodeText" x="710" y="550" text-anchor="middle">sub_2B20</text>
+<text class="nodeText" x="710" y="572" text-anchor="middle">__cxa_atexit</text>
+<rect class="ok" x="550" y="630" width="320" height="72"/>
+<text class="nodeText" x="710" y="660" text-anchor="middle">登记到 libc 析构表</text>
+<text class="nodeText" x="710" y="682" text-anchor="middle">等待 unload / exit</text>
+<rect class="box" x="1020" y="190" width="320" height="72"/>
+<text class="nodeText" x="1180" y="220" text-anchor="middle">卸载期</text>
+<text class="nodeText" x="1180" y="242" text-anchor="middle">.fini_array[0]</text>
+<rect class="box" x="1020" y="300" width="320" height="72"/>
+<text class="nodeText" x="1180" y="330" text-anchor="middle">0x15d00</text>
+<text class="nodeText" x="1180" y="352" text-anchor="middle">R_AARCH64_RELATIVE +0x2c00</text>
+<rect class="box" x="1020" y="410" width="320" height="72"/>
+<text class="nodeText" x="1180" y="440" text-anchor="middle">start @ 0x2c00</text>
+<text class="nodeText" x="1180" y="462" text-anchor="middle">x0 = &amp;unk_16000</text>
+<rect class="box" x="1020" y="520" width="320" height="72"/>
+<text class="nodeText" x="1180" y="550" text-anchor="middle">sub_2AA0</text>
+<text class="nodeText" x="1180" y="572" text-anchor="middle">__cxa_finalize</text>
+<rect class="box" x="1020" y="630" width="320" height="72"/>
+<text class="nodeText" x="1180" y="660" text-anchor="middle">执行与 unk_16000 关联的</text>
+<text class="nodeText" x="1180" y="682" text-anchor="middle">__cxa_atexit 回调</text>
+<rect class="ok" x="1020" y="740" width="320" height="72"/>
+<text class="nodeText" x="1180" y="770" text-anchor="middle">loc_4F6C / stage-2 fini</text>
+<text class="nodeText" x="1180" y="792" text-anchor="middle">回调完成</text>
+</svg>

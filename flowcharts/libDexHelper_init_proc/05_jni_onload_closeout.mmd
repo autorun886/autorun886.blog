@@ -1,0 +1,17 @@
+flowchart TD
+    A["relocation 两轮完成"] --> B["准备查找 JNI_OnLoad"]
+    B --> C["sub_2CE8('JNI_OnLoad')"]
+    C --> D["得到 SysV hash 0x467e784"]
+    D --> E["按 .hash bucket/chain 定位候选符号"]
+    E --> F["strcmp 候选名与 JNI_OnLoad"]
+    F --> G{"是否匹配?"}
+    G -- "否" --> H["继续下一个候选"]
+    H --> E
+    G -- "是" --> I["得到 JNI_OnLoad 地址"]
+    I --> J["调用 init 函数"]
+    J --> K["调用 init_array"]
+    K --> L["调用 JNI_OnLoad"]
+    L --> M["注册 fini/析构回调"]
+    M --> N["回写 loader 元数据"]
+    N --> O["close 资源"]
+    O --> P["sub_36E0 ret=0"]

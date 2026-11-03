@@ -1,0 +1,16 @@
+flowchart TD
+    A["sub_2DC0 入口"] --> B["读取 relocation count"]
+    B --> C{"当前条目是否存在?"}
+    C -- "否" --> Z["全部处理完\n返回 1"]
+    C -- "是" --> D["解析 r_offset / r_info / addend\n拆 symbol index 和 type"]
+    D --> E{"该 type 是否需要符号?"}
+    E -- "否" --> F["使用 load_bias/addend\n直接计算目标值"]
+    F --> O1["按 relocation type 写目标地址\n推进到下一条继续循环"]
+    E -- "是" --> G["name = strtab + sym.st_name\n遍历 dlopen handle 数组"]
+    G --> H["dlsym(handle, name)"]
+    H --> I{"dlsym 是否成功?"}
+    I -- "是" --> J["使用 symbol_value\n按 relocation type 写目标地址"]
+    I -- "否" --> K["dlerror + strstr\n检查非全局符号提示"]
+    K -- "非全局" --> L["sub_2CE8 SysV hash fallback\nbucket/chain 查隐藏符号"]
+    K -- "失败" --> X["abort"]
+    L --> J

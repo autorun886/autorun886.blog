@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect x="0" y="0" width="1200" height="760" fill="#ffffff"/>
+
+  <text x="600" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="#111827">dynamic section tag flow</text>
+  <text x="600" y="68" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#475569">PT_DYNAMIC scan - tag dispatch - loader state - next stage</text>
+
+  <rect x="450" y="100" width="300" height="58" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="600" y="124" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">sub_36E0</text>
+  <text x="600" y="146" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#111827">enter dynamic section stage</text>
+
+  <rect x="450" y="190" width="300" height="58" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="600" y="214" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">locate PT_DYNAMIC</text>
+  <text x="600" y="236" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#111827">get Dyn entry array</text>
+
+  <rect x="450" y="280" width="300" height="58" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/>
+  <text x="600" y="304" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">more Dyn entries?</text>
+  <text x="600" y="326" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#111827">d_tag != DT_NULL</text>
+
+  <rect x="450" y="370" width="300" height="58" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="600" y="394" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">read d_tag / d_val</text>
+  <text x="600" y="416" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#111827">dispatch at 0x4518 jump table</text>
+
+  <rect x="80" y="500" width="230" height="70" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="195" y="528" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">base tables</text>
+  <text x="195" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#111827">STRTAB / SYMTAB / HASH</text>
+
+  <rect x="350" y="500" width="230" height="70" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="465" y="528" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">relocation tables</text>
+  <text x="465" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#111827">RELA / JMPREL / PLTRELSZ</text>
+
+  <rect x="620" y="500" width="230" height="70" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="735" y="528" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">lifecycle entries</text>
+  <text x="735" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#111827">INIT / FINI arrays</text>
+
+  <rect x="890" y="500" width="230" height="70" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="1005" y="528" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">dependencies</text>
+  <text x="1005" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#111827">DT_NEEDED strings</text>
+
+  <rect x="450" y="650" width="300" height="58" fill="#ecfdf5" stroke="#047857" stroke-width="2"/>
+  <text x="600" y="674" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">save loader state</text>
+  <text x="600" y="696" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#111827">dlopen / relocation / JNI lookup</text>
+
+  <rect x="850" y="280" width="240" height="58" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="970" y="304" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#111827">done</text>
+  <text x="970" y="326" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#111827">continue loader flow</text>
+
+  <line x1="600" y1="158" x2="600" y2="190" stroke="#334155" stroke-width="2"/>
+  <polygon points="600,190 594,178 606,178" fill="#334155"/>
+  <line x1="600" y1="248" x2="600" y2="280" stroke="#334155" stroke-width="2"/>
+  <polygon points="600,280 594,268 606,268" fill="#334155"/>
+  <line x1="600" y1="338" x2="600" y2="370" stroke="#334155" stroke-width="2"/>
+  <polygon points="600,370 594,358 606,358" fill="#334155"/>
+  <text x="620" y="358" font-family="Arial, sans-serif" font-size="13" fill="#334155">yes</text>
+
+  <line x1="750" y1="309" x2="850" y2="309" stroke="#334155" stroke-width="2"/>
+  <polygon points="850,309 838,303 838,315" fill="#334155"/>
+  <text x="800" y="298" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#334155">no</text>
+
+  <line x1="600" y1="428" x2="600" y2="460" stroke="#334155" stroke-width="2"/>
+  <polygon points="600,460 594,448 606,448" fill="#334155"/>
+  <line x1="195" y1="460" x2="1005" y2="460" stroke="#334155" stroke-width="2"/>
+  <line x1="195" y1="460" x2="195" y2="500" stroke="#334155" stroke-width="2"/>
+  <polygon points="195,500 189,488 201,488" fill="#334155"/>
+  <line x1="465" y1="460" x2="465" y2="500" stroke="#334155" stroke-width="2"/>
+  <polygon points="465,500 459,488 471,488" fill="#334155"/>
+  <line x1="735" y1="460" x2="735" y2="500" stroke="#334155" stroke-width="2"/>
+  <polygon points="735,500 729,488 741,488" fill="#334155"/>
+  <line x1="1005" y1="460" x2="1005" y2="500" stroke="#334155" stroke-width="2"/>
+  <polygon points="1005,500 999,488 1011,488" fill="#334155"/>
+
+  <line x1="195" y1="570" x2="195" y2="610" stroke="#334155" stroke-width="2"/>
+  <line x1="465" y1="570" x2="465" y2="610" stroke="#334155" stroke-width="2"/>
+  <line x1="735" y1="570" x2="735" y2="610" stroke="#334155" stroke-width="2"/>
+  <line x1="1005" y1="570" x2="1005" y2="610" stroke="#334155" stroke-width="2"/>
+  <line x1="195" y1="610" x2="1005" y2="610" stroke="#334155" stroke-width="2"/>
+  <line x1="600" y1="610" x2="600" y2="650" stroke="#334155" stroke-width="2"/>
+  <polygon points="600,650 594,638 606,638" fill="#334155"/>
+
+  <line x1="450" y1="679" x2="40" y2="679" stroke="#334155" stroke-width="2"/>
+  <line x1="40" y1="679" x2="40" y2="309" stroke="#334155" stroke-width="2"/>
+  <line x1="40" y1="309" x2="450" y2="309" stroke="#334155" stroke-width="2"/>
+  <polygon points="450,309 438,303 438,315" fill="#334155"/>
+  <text x="52" y="492" font-family="Arial, sans-serif" font-size="13" fill="#334155">next entry</text>
+</svg>

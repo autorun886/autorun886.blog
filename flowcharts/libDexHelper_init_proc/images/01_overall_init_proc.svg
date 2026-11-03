@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1040" viewBox="0 0 1240 1040">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#94a3b8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .bg{fill:#f8fafc}
+    .title{font:700 28px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#0f172a}
+    .box{fill:#ffffff;stroke:#475569;stroke-width:1.4;rx:8;filter:url(#shadow)}
+    .decision{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5;filter:url(#shadow)}
+    .term{fill:#fee2e2;stroke:#991b1b;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .ok{fill:#ecfdf5;stroke:#047857;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .nodeText{font:500 16px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#111827}
+    .edge{stroke:#334155;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+    .edgeText{font:600 14px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#334155}
+  </style>
+<rect class="bg" x="0" y="0" width="1240" height="1040"/>
+<text class="title" x="620" y="44" text-anchor="middle">libDexHelper.so init_proc 总流程</text>
+<path class="edge" d="M620,154 L620,186"/>
+
+<path class="edge" d="M620,258 L620,290"/>
+
+<path class="edge" d="M620,362 L620,394"/>
+
+<path class="edge" d="M620,466 L620,498"/>
+
+<path class="edge" d="M620,570 L620,602"/>
+
+<path class="edge" d="M620,674 L620,706"/>
+
+<path class="edge" d="M620,778 L620,810"/>
+
+<path class="edge" d="M474,856 L390,848"/>
+<text class="edgeText" x="432" y="846" text-anchor="middle">是</text>
+<path class="edge" d="M766,856 L850,848"/>
+<text class="edgeText" x="808" y="846" text-anchor="middle">否</text>
+<path class="edge" d="M240,884 L240,920"/>
+
+<path class="edge" d="M1000,884 L1000,920"/>
+
+<rect class="box" x="460" y="82" width="320" height="72"/>
+<text class="nodeText" x="620" y="112" text-anchor="middle">Android linker</text>
+<text class="nodeText" x="620" y="134" text-anchor="middle">加载 libDexHelper.so</text>
+<rect class="box" x="460" y="186" width="320" height="72"/>
+<text class="nodeText" x="620" y="216" text-anchor="middle">处理 .dynamic / relocation</text>
+<text class="nodeText" x="620" y="238" text-anchor="middle">执行 init array</text>
+<rect class="box" x="460" y="290" width="320" height="72"/>
+<text class="nodeText" x="620" y="320" text-anchor="middle">.init_array[0]</text>
+<text class="nodeText" x="620" y="342" text-anchor="middle">0x15cf0 -&gt; +0x4d1c</text>
+<rect class="box" x="460" y="394" width="320" height="72"/>
+<text class="nodeText" x="620" y="424" text-anchor="middle">进入 sub_4A78</text>
+<text class="nodeText" x="620" y="446" text-anchor="middle">内部入口 0x4d1c</text>
+<rect class="box" x="460" y="498" width="320" height="72"/>
+<text class="nodeText" x="620" y="528" text-anchor="middle">定位自身 ELF base</text>
+<text class="nodeText" x="620" y="550" text-anchor="middle">保存 qword_16050/n70</text>
+<rect class="box" x="460" y="602" width="320" height="72"/>
+<text class="nodeText" x="620" y="632" text-anchor="middle">dlopen libc.so</text>
+<text class="nodeText" x="620" y="654" text-anchor="middle">dlsym sscanf</text>
+<rect class="box" x="460" y="706" width="320" height="72"/>
+<text class="nodeText" x="620" y="736" text-anchor="middle">调用 sub_4A78</text>
+<text class="nodeText" x="620" y="758" text-anchor="middle">maps/RWX 检测</text>
+<polygon class="decision" points="620,810 766,856 620,902 474,856"/>
+<text class="nodeText" x="620" y="850" text-anchor="middle">检测结果</text>
+<text class="nodeText" x="620" y="872" text-anchor="middle">是否非 0?</text>
+<rect class="term" x="90" y="812" width="300" height="72"/>
+<text class="nodeText" x="240" y="842" text-anchor="middle">失败链</text>
+<text class="nodeText" x="240" y="864" text-anchor="middle">getpid -&gt; kill -&gt; _Exit</text>
+<rect class="box" x="850" y="812" width="300" height="72"/>
+<text class="nodeText" x="1000" y="842" text-anchor="middle">正常链</text>
+<text class="nodeText" x="1000" y="864" text-anchor="middle">复制状态 -&gt; sub_36E0</text>
+<rect class="ok" x="850" y="920" width="300" height="72"/>
+<text class="nodeText" x="1000" y="950" text-anchor="middle">sub_36E0 ret=0</text>
+<text class="nodeText" x="1000" y="972" text-anchor="middle">init_proc 完成</text>
+<rect class="term" x="90" y="920" width="300" height="72"/>
+<text class="nodeText" x="240" y="961" text-anchor="middle">进程终止</text>
+</svg>

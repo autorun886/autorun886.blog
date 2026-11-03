@@ -1,0 +1,22 @@
+﻿flowchart TD
+    A["Android linker loads libDexHelper.so"] --> B["INIT_ARRAY entry: 0x4d1c inside sub_4A78"]
+    B --> C["sub_4A78 stage-0 init\nresolve self base / qword_16050"]
+    C --> D["dlopen('libc.so', 2)\ndlsym('sscanf')"]
+    D --> E["recursive detector call\nsub_4A78@0x4a78"]
+    E --> F["fopen('/proc/self/maps')\nfgets loop"]
+    F --> G["match libc/libdl/linker\nsscanf permissions"]
+    G --> H{"rwx and size <= 0x4000 ?"}
+
+    H -- "yes" --> X1["nonzero result\ncbnz -> 0x4f38"]
+    X1 --> X2["getpid\nkill SIGKILL\n_Exit"]
+
+    H -- "no" --> I["zero result\ncopy dword_16010..16028"]
+    I --> J["sub_36E0 manual loader"]
+    J --> K["find self mapping\nread metadata"]
+    K --> L["save dword_16088\nXOR key"]
+    L --> M["mmap header\nsub_2C0C decode #1"]
+    M --> N["parse ELF/program headers\nmmap full image"]
+    N --> O["sub_2C0C decode #2/#3\nparse dynamic section"]
+    O --> P["sub_2DC0 relocation\npass #1 count=0x6a3"]
+    P --> Q["sub_2DC0 pass #2\nJNI_OnLoad hash / init"]
+

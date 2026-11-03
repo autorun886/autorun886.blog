@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="820" viewBox="0 0 1260 820">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#94a3b8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .bg{fill:#f8fafc}
+    .title{font:700 28px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#0f172a}
+    .box{fill:#ffffff;stroke:#475569;stroke-width:1.4;rx:8;filter:url(#shadow)}
+    .decision{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5;filter:url(#shadow)}
+    .term{fill:#fee2e2;stroke:#991b1b;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .ok{fill:#ecfdf5;stroke:#047857;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .nodeText{font:500 16px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#111827}
+    .edge{stroke:#334155;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+    .edgeText{font:600 14px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#334155}
+  </style>
+<rect class="bg" x="0" y="0" width="1260" height="820"/>
+<text class="title" x="630" y="44" text-anchor="middle">导入跳板 / PLT0 / GOT 解析结构</text>
+<path class="edge" d="M630,154 L630,190"/>
+
+<path class="edge" d="M630,262 L630,300"/>
+
+<path class="edge" d="M630,372 L630,410"/>
+
+<path class="edge" d="M470,446 L400,576"/>
+<text class="edgeText" x="435" y="505" text-anchor="middle">lazy bind</text>
+<path class="edge" d="M790,446 L860,576"/>
+<text class="edgeText" x="825" y="505" text-anchor="middle">bound</text>
+<path class="edge" d="M400,576 L860,576"/>
+
+<path class="edge" d="M860,576 L790,716"/>
+
+<rect class="box" x="470" y="82" width="320" height="72"/>
+<text class="nodeText" x="630" y="112" text-anchor="middle">调用点</text>
+<text class="nodeText" x="630" y="134" text-anchor="middle">BL sub_2B30 等短跳板</text>
+<rect class="box" x="470" y="190" width="320" height="72"/>
+<text class="nodeText" x="630" y="220" text-anchor="middle">短跳板</text>
+<text class="nodeText" x="630" y="242" text-anchor="middle">ADRP/LDR/ADD/BR X17</text>
+<rect class="box" x="470" y="300" width="320" height="72"/>
+<text class="nodeText" x="630" y="330" text-anchor="middle">读取对应 GOT 槽</text>
+<text class="nodeText" x="630" y="352" text-anchor="middle">psub_2A30_x</text>
+<rect class="box" x="470" y="410" width="320" height="72"/>
+<text class="nodeText" x="630" y="440" text-anchor="middle">首次调用: GOT 指向 PLT0</text>
+<text class="nodeText" x="630" y="462" text-anchor="middle">后续调用: GOT 指向真实 API</text>
+<rect class="box" x="80" y="540" width="320" height="72"/>
+<text class="nodeText" x="240" y="570" text-anchor="middle">sub_2A30 PLT0 resolver</text>
+<text class="nodeText" x="240" y="592" text-anchor="middle">进入 linker 解析</text>
+<rect class="box" x="860" y="540" width="320" height="72"/>
+<text class="nodeText" x="1020" y="570" text-anchor="middle">真实 libc/libdl API</text>
+<text class="nodeText" x="1020" y="592" text-anchor="middle">fopen/dlsym/mmap/...</text>
+<rect class="ok" x="470" y="680" width="320" height="72"/>
+<text class="nodeText" x="630" y="710" text-anchor="middle">调用返回调用点</text>
+<text class="nodeText" x="630" y="732" text-anchor="middle">完成 API 语义</text>
+</svg>

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="1160" viewBox="0 0 1360 1160">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#94a3b8" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .bg{fill:#f8fafc}
+    .title{font:700 28px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#0f172a}
+    .box{fill:#ffffff;stroke:#475569;stroke-width:1.4;rx:8;filter:url(#shadow)}
+    .decision{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5;filter:url(#shadow)}
+    .term{fill:#fee2e2;stroke:#991b1b;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .ok{fill:#ecfdf5;stroke:#047857;stroke-width:1.5;rx:8;filter:url(#shadow)}
+    .nodeText{font:500 16px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#111827}
+    .edge{stroke:#334155;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+    .edgeText{font:600 14px 'Microsoft YaHei','Segoe UI',Arial,sans-serif;fill:#334155}
+  </style>
+<rect class="bg" x="0" y="0" width="1360" height="1160"/>
+<text class="title" x="680" y="44" text-anchor="middle">sub_2DC0 relocation 子流程</text>
+<path class="edge" d="M680,154 L680,186"/>
+
+<path class="edge" d="M680,258 L680,306"/>
+
+<path class="edge" d="M534,352 L360,358"/>
+<text class="edgeText" x="447" y="349" text-anchor="middle">否</text>
+<path class="edge" d="M680,398 L680,440"/>
+<text class="edgeText" x="680" y="413" text-anchor="middle">是</text>
+<path class="edge" d="M680,512 L680,560"/>
+
+<path class="edge" d="M680,652 L680,690"/>
+<text class="edgeText" x="680" y="665" text-anchor="middle">否</text>
+<path class="edge" d="M826,606 L960,612"/>
+<text class="edgeText" x="893" y="603" text-anchor="middle">是</text>
+<path class="edge" d="M680,762 L680,804"/>
+
+<path class="edge" d="M1120,648 L1120,690"/>
+
+<path class="edge" d="M1120,762 L1120,804"/>
+
+<path class="edge" d="M1120,896 L1120,1040"/>
+<text class="edgeText" x="1120" y="962" text-anchor="middle">是</text>
+<path class="edge" d="M974,850 L400,970"/>
+<text class="edgeText" x="687" y="904" text-anchor="middle">否</text>
+<path class="edge" d="M240,1006 L240,1040"/>
+<text class="edgeText" x="240" y="1017" text-anchor="middle">非全局</text>
+<path class="edge" d="M240,934 L240,876"/>
+<text class="edgeText" x="240" y="899" text-anchor="middle">失败</text>
+<path class="edge" d="M400,1076 L960,1076"/>
+
+<rect class="box" x="520" y="82" width="320" height="72"/>
+<text class="nodeText" x="680" y="123" text-anchor="middle">sub_2DC0 入口</text>
+<rect class="box" x="520" y="186" width="320" height="72"/>
+<text class="nodeText" x="680" y="216" text-anchor="middle">读取 relocation count</text>
+<text class="nodeText" x="680" y="238" text-anchor="middle">建立遍历范围</text>
+<polygon class="decision" points="680,306 826,352 680,398 534,352"/>
+<text class="nodeText" x="680" y="346" text-anchor="middle">当前条目</text>
+<text class="nodeText" x="680" y="368" text-anchor="middle">是否存在?</text>
+<rect class="ok" x="80" y="322" width="280" height="72"/>
+<text class="nodeText" x="220" y="352" text-anchor="middle">全部处理完</text>
+<text class="nodeText" x="220" y="374" text-anchor="middle">返回 1</text>
+<rect class="box" x="520" y="440" width="320" height="72"/>
+<text class="nodeText" x="680" y="470" text-anchor="middle">解析 r_offset / r_info / addend</text>
+<text class="nodeText" x="680" y="492" text-anchor="middle">拆 symbol index 和 type</text>
+<polygon class="decision" points="680,560 826,606 680,652 534,606"/>
+<text class="nodeText" x="680" y="600" text-anchor="middle">该 type</text>
+<text class="nodeText" x="680" y="622" text-anchor="middle">需要符号?</text>
+<rect class="box" x="520" y="690" width="320" height="72"/>
+<text class="nodeText" x="680" y="720" text-anchor="middle">不需要符号</text>
+<text class="nodeText" x="680" y="742" text-anchor="middle">load_bias/addend 直接计算</text>
+<rect class="ok" x="520" y="804" width="320" height="72"/>
+<text class="nodeText" x="680" y="834" text-anchor="middle">按 relocation type 写目标地址</text>
+<text class="nodeText" x="680" y="856" text-anchor="middle">推进到下一条继续循环</text>
+<rect class="box" x="960" y="576" width="320" height="72"/>
+<text class="nodeText" x="1120" y="606" text-anchor="middle">需要符号</text>
+<text class="nodeText" x="1120" y="628" text-anchor="middle">name = strtab + sym.st_name</text>
+<rect class="box" x="960" y="690" width="320" height="72"/>
+<text class="nodeText" x="1120" y="720" text-anchor="middle">遍历 dlopen handle 数组</text>
+<text class="nodeText" x="1120" y="742" text-anchor="middle">dlsym(handle, name)</text>
+<polygon class="decision" points="1120,804 1266,850 1120,896 974,850"/>
+<text class="nodeText" x="1120" y="844" text-anchor="middle">dlsym</text>
+<text class="nodeText" x="1120" y="866" text-anchor="middle">成功?</text>
+<rect class="ok" x="960" y="1040" width="320" height="72"/>
+<text class="nodeText" x="1120" y="1070" text-anchor="middle">使用 symbol_value</text>
+<text class="nodeText" x="1120" y="1092" text-anchor="middle">按 relocation type 写目标地址</text>
+<rect class="box" x="80" y="934" width="320" height="72"/>
+<text class="nodeText" x="240" y="964" text-anchor="middle">dlerror + strstr</text>
+<text class="nodeText" x="240" y="986" text-anchor="middle">检查非全局符号提示</text>
+<rect class="box" x="80" y="1040" width="320" height="72"/>
+<text class="nodeText" x="240" y="1070" text-anchor="middle">sub_2CE8 SysV hash fallback</text>
+<text class="nodeText" x="240" y="1092" text-anchor="middle">bucket/chain 查隐藏符号</text>
+<rect class="term" x="80" y="804" width="320" height="72"/>
+<text class="nodeText" x="240" y="834" text-anchor="middle">解析失败</text>
+<text class="nodeText" x="240" y="856" text-anchor="middle">abort</text>
+</svg>
