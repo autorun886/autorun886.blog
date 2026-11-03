@@ -1409,3 +1409,83 @@ button:focus-visible,
     transform: none !important;
   }
 }
+
+/* Content-first layout: remove decorative author portraits site-wide. */
+.avatar-img,
+.card-info .avatar-img,
+#sidebar-menus > .avatar-img,
+.shuoshuo-avatar {
+  display: none !important;
+}
+
+/* The aside is a reading aid on posts; archive metadata should not compete
+   with the homepage and standalone pages. */
+body:not(.page-type-post) #aside-content,
+#aside-content:has(.sticky_layout:empty) {
+  display: none !important;
+}
+
+body:not(.page-type-post) #content-inner.layout {
+  width: min(1180px, calc(100% - 48px));
+}
+
+/* Markdown should read as a continuous document rather than a stack of cards. */
+#article-container {
+  font-size: 0.98rem !important;
+  line-height: 1.76 !important;
+}
+
+#article-container p {
+  margin-bottom: 0.82em;
+}
+
+#article-container h1,
+#article-container h2 {
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+#article-container h1 {
+  margin-block: 2.25rem 0.8rem;
+}
+
+#article-container h2 {
+  margin-block: 2rem 0.72rem;
+}
+
+#article-container h3 {
+  margin-block: 1.45rem 0.55rem;
+}
+
+#article-container ul,
+#article-container ol {
+  margin-bottom: 0.9em;
+}
+
+#article-container li {
+  margin-block: 0.22em;
+}
+
+#article-container blockquote {
+  margin-block: 1.1rem;
+  padding: 0.72rem 1rem;
+  border: 0 !important;
+  border-left: 3px solid var(--blog-accent) !important;
+  border-radius: 0;
+  background: rgba(108, 92, 231, 0.045);
+}
+
+#article-container figure.highlight {
+  margin-block: 1rem 1.35rem;
+}
+
+@media (min-width: 1288px) {
+  .post #content-inner.layout {
+    grid-template-columns: 210px minmax(0, 760px) 1fr;
+    gap: 28px;
+  }
+
+  .post #aside-content {
+    padding-right: 0;
+  }
+}
