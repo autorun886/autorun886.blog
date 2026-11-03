@@ -810,52 +810,12 @@ button:focus-visible,
 }
 
 #article-container figure.highlight {
-  max-width: none;
   margin: 1.2rem 0 1.8rem;
-  overflow: auto;
-  border: 0;
-  border-radius: 6px;
-  background: #1c1d24;
-  box-shadow: none;
-  scrollbar-color: #575966 #1c1d24;
 }
 
 #article-container figure.highlight table {
   width: max-content;
   min-width: 100%;
-}
-
-#article-container figure.highlight pre,
-#article-container figure.highlight code {
-  font-family: var(--blog-code-font);
-  font-size: 0.89rem;
-  line-height: 1.72;
-}
-
-#article-container figure.highlight .gutter {
-  opacity: 0.66;
-  user-select: none;
-}
-
-#article-container .highlight-tools {
-  min-height: 38px;
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-#article-container .highlight-tools .code-lang {
-  color: #b7b8c1;
-  font-family: var(--blog-code-font);
-  font-size: 0.72rem;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-#article-container .highlight-tools .copy-button {
-  color: #b7b8c1;
-}
-
-#article-container .highlight-tools .copy-button:hover {
-  color: #fff;
 }
 
 #article-container .table-wrap {
@@ -1358,12 +1318,6 @@ button:focus-visible,
     width: calc(100% + 12px);
     margin-left: -6px;
     border-radius: 7px;
-  }
-
-  #article-container figure.highlight pre,
-  #article-container figure.highlight code {
-    font-size: 0.82rem;
-    line-height: 1.68;
   }
 
   #pagination.pagination-post .pagination-related {
